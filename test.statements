@@ -1,0 +1,114 @@
+# vim: filetype=sh
+# =============================================================================
+# Configuration file for window-suspender
+# =============================================================================
+#
+# SYNTAX
+#   - Comments start with '#' and last to the next newline.
+#   - Rules have the form:
+#     (condition) {
+#       statement;
+#       ...
+#     }
+#   - Keywords (like `state`, `stackposition`, `return`, etc ...) must NOT be
+#     quoted.
+#   - Strings have to be quoted in double or single quotes.
+#     Currently no escape-mechanisms are provided, so you have to put the string
+#     in single quotes if it contains a double quote an vice versa.
+#     If your string contains both characters ... well, bad luck!
+#   - Numbers may not be quoted
+#
+#  CONDITIONS
+#
+#    Checking for window states:
+#      (state == <STATE>), (state != <STATE>)
+#
+#      Available window states:
+#        minimized
+#        maximized_horizontally
+#        maximized_vertically
+#        shaded
+#        skip_pager
+#        skip_tasklist
+#        hidden
+#        fullscreen
+#        demands_attention
+#        above
+#        below
+#        inactive_workspace
+#        sticky
+#
+#
+#    Checking for window type:
+#      (type == <TYPE>), (type != <TYPE>)
+#
+#      Available window types:
+#        desktop
+#        dialog
+#        dock
+#        menu
+#        normal
+#        splashscreen
+#        toolbar
+#        utility
+#
+#
+#    String or RegEx matching:
+#      (<FIELD> == <STRING>), (<FIELD> != <STRING>),
+#      (<FIELD> =~ <REGEX>), (<FIELD> !~ <REGEX>)
+#
+#      Available fields for string comparison
+#        title
+#        groupname
+#        classname
+#
+#    Matching against the stack position of the window:
+#      (stackposition <OPERATOR> <NUMBER>)
+#
+#      Available operators:
+#        ==  !=  <=  >=  <  >
+#
+#
+#  COMMANDS
+#
+#     return
+#       Immediately stop further processing.
+#
+#     print <STRING>
+#       Prints STRING with trailing a trailing newline.
+#
+#     suspend [--suspend-delay=<MILIS>] [--refresh-delay=<MILIS>] [--refresh-duration=<MILIS>]
+#       Suspends the window.
+#
+#  TIPS
+#    - Use the xprop or the wnckprop command to obtain information of a window
+#    - Config is best viewed with shell syntax (at least in vim)
+#
+#  GOOD LUCK!
+# =============================================================================
+
+# Never suspend media players
+(classname == 'mpv') {
+  return;
+}
+
+# Never suspend windows that are in the above state
+(state == above) {
+  print 'Its above';
+  return;
+}
+
+(state == sticky) {
+  print 'Its sticky';
+  return;
+}
+
+(state == minimized) {
+  print 'Its minimized';
+  suspend;
+}
+
+(stackposition >= 1) {
+  print 'Stack position >= 1';
+  suspend --suspend-delay 1000 --refresh-delay 5000 --refresh-duration 100;
+}
