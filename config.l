@@ -40,21 +40,23 @@ stackposition          return COND_STACKPOSITION;
 state                  return COND_STATE;
 
 print                  return PRINT;
+system                 return SYSTEM;
 return                 return RETURN;
 suspend                return SUSPEND;
 --suspend-delay=?      return OPTION_SUSPEND_DELAY;
 --refresh-delay=?      return OPTION_REFRESH_DELAY;
 --refresh-duration=?   return OPTION_REFRESH_DURATION;
 
-!                      /* -------------------------------- */    return NOT;
+!                      /* -----------------------------------*/  return NOT;
 ==                     yylval.comparison=COMPARE_EQUAL        ;  return EQUAL;
 !=                     yylval.comparison=COMPARE_UNEQUAL      ;  return UNEQUAL;
-=~                     /* -------------------------------- */    return REGEX_EQUAL;
-!~                     /* -------------------------------- */    return REGEX_UNEQUAL;
+=~                     /* -----------------------------------*/  return REGEX_EQUAL;
+!~                     /* -----------------------------------*/  return REGEX_UNEQUAL;
 >                      yylval.comparison=COMPARE_GREATER      ;  return GREATER;
 >=                     yylval.comparison=COMPARE_GREATER_EQUAL;  return GREATER_EQUAL;
 \<                     yylval.comparison=COMPARE_LESS         ;  return LESS;
 \<=                    yylval.comparison=COMPARE_LESS_EQUAL   ;  return LESS_EQUAL;
+contains               /* -----------------------------------*/  return CONTAINS;
 
 &&                     yylval.logic=CONDITIONAL_LOGIC_AND; return AND_AND;
 \|\|                   yylval.logic=CONDITIONAL_LOGIC_OR ; return OR_OR;

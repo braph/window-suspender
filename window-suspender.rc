@@ -7,7 +7,7 @@
 #   - Comments start with '#' and last to the next newline.
 #   - Rules have the form:
 #     (condition) {
-#       statement;
+#       command;
 #       ...
 #     }
 #   - Keywords (like `state`, `stackposition`, `return`, etc ...) must NOT be
@@ -62,6 +62,7 @@
 #        groupname
 #        classname
 #
+#
 #    Matching against the stack position of the window:
 #      (stackposition <OPERATOR> <NUMBER>)
 #
@@ -77,12 +78,43 @@
 #     print <STRING>
 #       Prints STRING with trailing a trailing newline.
 #
+#     system <STRING>
+#       Executes STRING in a shell.
+#
 #     suspend [--suspend-delay=<MILIS>] [--refresh-delay=<MILIS>] [--refresh-duration=<MILIS>]
 #       Suspends the window.
+#
+#
+#  ENVIROMENT FOR SYSTEM COMMAND
+#
+#     Following environment variables are set when using `system`:
+#       $WINDOW_TITLE
+#       $WINDOW_CLASS
+#       $WINDOW_GROUP
+#       $WINDOW_TYPE
+#       $WINDOW_STATE - Comma separated list of states
+#       $WINDOW_PID
+#       $WINDOW_STACKPOSITION
+#    These window state variables are set to "0" or "1":
+#       $WINDOW_IS_MINIMIZED
+#       $WINDOW_IS_MAXIMIZED_HORIZONTALLY
+#       $WINDOW_IS_MAXIMIZED_VERTICALLY
+#       $WINDOW_IS_SHADED
+#       $WINDOW_IS_SKIP_PAGER
+#       $WINDOW_IS_SKIP_TASKLIST
+#       $WINDOW_IS_STICKY
+#       $WINDOW_IS_HIDDEN
+#       $WINDOW_IS_FULLSCREEN
+#       $WINDOW_IS_DEMANDS_ATTENTION
+#       $WINDOW_IS_ABOVE
+#       $WINDOW_IS_BELOW
+#       $WINDOW_IS_INACTIVE_WORKSPACE
+#      
 #
 #  TIPS
 #    - Use the xprop or the wnckprop command to obtain information of a window
 #    - Config is best viewed with shell syntax (at least in vim)
+#
 #
 #  GOOD LUCK!
 # =============================================================================
@@ -92,23 +124,24 @@
   return;
 }
 
-# Never suspend windows that are in the above state
-(state == above) {
-  print 'Its above';
-  return;
-}
-
-(state == sticky) {
-  print 'Its sticky';
+# Never suspend windows in these states
+(state == above || state == sticky) {
   return;
 }
 
 (state == minimized) {
-  print 'Its minimized';
   suspend;
 }
 
+(classname == 'bnox' && title contains "YouTube") {
+  return;
+}
+
 (stackposition >= 1) {
-  print 'Stack position >= 1';
   suspend --suspend-delay 1000 --refresh-delay 5000 --refresh-duration 100;
 }
+
+return;
+
+system 'echo PID=$WINDOW_PID class=$WINDOW_CLASS, group=$WINDOW_GROUP [$WINDOW_DESKTOP]{$WINDOW_STACKPOSITION} $WINDOW_TITLE type=$WINDOW_TYPE states=$WINDOW_STATE';
+

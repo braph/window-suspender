@@ -9,6 +9,7 @@ typedef enum {
   STATEMENT_ROOT = 0, // INTERNAL
   STATEMENT_IF,
   STATEMENT_PRINT,
+  STATEMENT_SYSTEM,
   STATEMENT_RETURN,
   STATEMENT_SUSPEND,
   STATEMENT_RESUME, // INTERNAL
@@ -35,6 +36,10 @@ struct Statement {
     } print;
 
     struct {
+      char string[1];
+    } system;
+
+    struct {
       unsigned int suspend_delay;
       unsigned int refresh_delay;
       unsigned int refresh_duration;
@@ -46,7 +51,8 @@ struct Statement {
 // Constructors
 Statement* statement_if_new(Conditional*, Statement*);
 Statement* statement_return_new();
-Statement* statement_print_new(const char *);
+Statement* statement_print_new(const char*);
+Statement* statement_system_new(const char*);
 Statement* statement_suspend_new(unsigned int, unsigned int, unsigned int);
 
 // Methods

@@ -63,18 +63,20 @@ extern int yydebug;
     GREATER_EQUAL = 269,
     REGEX_EQUAL = 270,
     REGEX_UNEQUAL = 271,
-    PRINT = 272,
-    SUSPEND = 273,
-    RETURN = 274,
-    OPTION_SUSPEND_DELAY = 275,
-    OPTION_REFRESH_DELAY = 276,
-    OPTION_REFRESH_DURATION = 277,
-    COND_TYPE = 278,
-    COND_STACKPOSITION = 279,
-    COND_STATE = 280,
-    NOT = 281,
-    AND_AND = 282,
-    OR_OR = 283
+    CONTAINS = 272,
+    PRINT = 273,
+    SYSTEM = 274,
+    SUSPEND = 275,
+    RETURN = 276,
+    OPTION_SUSPEND_DELAY = 277,
+    OPTION_REFRESH_DELAY = 278,
+    OPTION_REFRESH_DURATION = 279,
+    COND_TYPE = 280,
+    COND_STACKPOSITION = 281,
+    COND_STATE = 282,
+    NOT = 283,
+    AND_AND = 284,
+    OR_OR = 285
   };
 #endif
 /* Tokens.  */
@@ -92,18 +94,20 @@ extern int yydebug;
 #define GREATER_EQUAL 269
 #define REGEX_EQUAL 270
 #define REGEX_UNEQUAL 271
-#define PRINT 272
-#define SUSPEND 273
-#define RETURN 274
-#define OPTION_SUSPEND_DELAY 275
-#define OPTION_REFRESH_DELAY 276
-#define OPTION_REFRESH_DURATION 277
-#define COND_TYPE 278
-#define COND_STACKPOSITION 279
-#define COND_STATE 280
-#define NOT 281
-#define AND_AND 282
-#define OR_OR 283
+#define CONTAINS 272
+#define PRINT 273
+#define SYSTEM 274
+#define SUSPEND 275
+#define RETURN 276
+#define OPTION_SUSPEND_DELAY 277
+#define OPTION_REFRESH_DELAY 278
+#define OPTION_REFRESH_DURATION 279
+#define COND_TYPE 280
+#define COND_STACKPOSITION 281
+#define COND_STATE 282
+#define NOT 283
+#define AND_AND 284
+#define OR_OR 285
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -121,7 +125,7 @@ union YYSTYPE
   struct Statement *statement;
   struct Conditional *conditional;
 
-#line 125 "y.tab.h"
+#line 129 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

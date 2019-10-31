@@ -23,10 +23,10 @@ const char* window_type_to_str(WnckWindowType type) {
 }
 
 /* ============================================================================
- * window_state_to_str()
+ * window_state_to_str() / window_states_to_str()
  * ==========================================================================*/
 
-static const char* _window_state_to_str(WnckWindowState state) {
+const char* window_state_to_str(WnckWindowState state) {
   switch (state) {
     case WNCK_WINDOW_STATE_MINIMIZED:               return "minimized";
     case WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY:  return "maximized_horizontally";
@@ -45,19 +45,19 @@ static const char* _window_state_to_str(WnckWindowState state) {
   }
 }
 
-const char *window_state_to_str(WnckWindowState state) {
+const char *window_states_to_str(WnckWindowState state) {
   static char *str = 0;
   free(str);
   str = 0;
 
-  const char *tmp = _window_state_to_str(state);
+  const char *tmp = window_state_to_str(state);
   if (tmp)
     return tmp;
 
   str = malloc(1024);
   str[0] = '\0';
-  for (int i = 0; i <= 16; ++i) {
-    if (state & (1 << i) && (tmp = _window_state_to_str(1 << i))) {
+  for (unsigned int i = 0; i <= WNCK_WINDOW_STATE_MAX; ++i) {
+    if (state & (1 << i) && (tmp = window_state_to_str(1 << i))) {
       if (str[0])
         strcat(str, ",");
       strcat(str, tmp);
@@ -98,7 +98,7 @@ const char* windump(WnckWindow *win) {
       *klass = wnck_window_get_class_group_name(win),
       *group = wnck_window_get_class_instance_name(win),
       *type  = window_type_to_str(wnck_window_get_window_type(win)),
-      *state = window_state_to_str(wnck_window_get_state(win));
+      *states = window_states_to_str(wnck_window_get_state(win));
     int
       pid = wnck_window_get_pid(win),
       number = 0, // TODO: desktop number
@@ -114,7 +114,7 @@ const char* windump(WnckWindow *win) {
     }
 
     snprintf(buf, sizeof(buf), "(PID=%d class=%s group=%s [%d]{%d}) \"%s\" type=%s states={%s}",
-      pid, klass, group, number, stack_pos, title_truncated, type, state);
+      pid, klass, group, number, stack_pos, title_truncated, type, states);
 
     free(title_truncated);
     return buf;

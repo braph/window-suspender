@@ -67,8 +67,8 @@ Statement* parse_config(const char *file) {
 %token <field>  WINDOW_FIELD
 %token <logic>  LOGIC_OPERATOR
 %token <comparison> EQUAL UNEQUAL LESS LESS_EQUAL GREATER GREATER_EQUAL
-%token REGEX_EQUAL REGEX_UNEQUAL
-%token PRINT SUSPEND RETURN
+%token REGEX_EQUAL REGEX_UNEQUAL CONTAINS
+%token PRINT SYSTEM SUSPEND RETURN
 %token OPTION_SUSPEND_DELAY OPTION_REFRESH_DELAY OPTION_REFRESH_DURATION
 %token COND_TYPE COND_STACKPOSITION COND_STATE
 %token NOT AND_AND OR_OR
@@ -91,10 +91,12 @@ numeric_comparison
     ;
 
 condition
-    : WINDOW_FIELD EQUAL STRING       { $$ = conditional_string_match_new($1, $3); }
-    | WINDOW_FIELD REGEX_EQUAL STRING { $$ = conditional_regex_match_new($1, $3); }
-    | WINDOW_FIELD UNEQUAL STRING     { $$ = C_NOT(conditional_string_match_new($1, $3)); }
-    | WINDOW_FIELD REGEX_UNEQUAL STRING { $$ = C_NOT(conditional_regex_match_new($1, $3)); }
+    : WINDOW_FIELD EQUAL STRING       { $$ = conditional_string_match_new($1, $3);         free($3); }
+    | WINDOW_FIELD REGEX_EQUAL STRING { $$ = conditional_regex_match_new($1, $3);          free($3); }
+    | WINDOW_FIELD UNEQUAL STRING     { $$ = C_NOT(conditional_string_match_new($1, $3));  free($3); }
+    | WINDOW_FIELD REGEX_UNEQUAL STRING { $$ = C_NOT(conditional_regex_match_new($1, $3)); free($3); }
+    | WINDOW_FIELD CONTAINS STRING    { $$ = conditional_string_contains_new($1, $3);      free($3); }
+    | SYSTEM STRING                   { $$ = conditional_system_new($2);                   free($2); }
     | COND_TYPE EQUAL WINDOW_TYPE     { $$ = conditional_windowtype_new($3); }
     | COND_STATE EQUAL WINDOW_STATE   { $$ = conditional_windowstate_new($3); }
     | COND_STACKPOSITION numeric_comparison NUMBER { $$ = conditional_stackposition_new($2, $3); }
@@ -130,8 +132,9 @@ suspend_statement
     ;
 
 command_statement
-    : PRINT STRING ';' { $$ = statement_print_new($2); free($2); }
-    | RETURN ';'       { $$ = statement_return_new(); }
+    : PRINT STRING ';'  { $$ = statement_print_new($2); free($2); }
+    | SYSTEM STRING ';' { $$ = statement_system_new($2); free($2); }
+    | RETURN ';'        { $$ = statement_return_new(); }
     | suspend_statement ';'
     ;
 

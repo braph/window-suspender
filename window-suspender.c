@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   gdk_init(&argc, &argv);
 
   GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-  const char *config_file = "test.statements";
+  const char *config_file = "./window-suspender.rc";
 
 OPTS:
   switch (getopt(argc, argv, "hc:")) {
@@ -45,7 +45,6 @@ OPTS:
 
   config = parse_config(config_file);
   if (! config) {
-    fprintf(stderr, "FOOO!\n");
     return 1;
   }
   if (DEBUG)

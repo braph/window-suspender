@@ -1,5 +1,6 @@
 #include "statement.h"
 #include "manager.h"
+#include "system.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -38,6 +39,9 @@ void statement_execute(Statement *self, WnckWindow *win) {
   switch (this.type) {
   case STATEMENT_PRINT:
     printf("%s\n", this.klass.print.string);
+    break;
+  case STATEMENT_SYSTEM:
+    system_with_winenv(this.klass.system.string, win);
     break;
   case STATEMENT_SUSPEND:
     suspend_process(
@@ -95,6 +99,12 @@ Statement* statement_print_new(const char *string) {
   return self;
 }
 
+Statement* statement_system_new(const char *string) {
+  CREATE_SELF_PLUS_SPACE(STATEMENT_SYSTEM, strlen(string));
+  strcpy(this.klass.system.string, string);
+  return self;
+}
+
 Statement* statement_suspend_new(unsigned int suspend_delay, unsigned int refresh_delay, unsigned int refresh_duration) {
   CREATE_SELF(STATEMENT_SUSPEND);
   this.klass.suspend.suspend_delay = suspend_delay;
@@ -127,6 +137,9 @@ void statement_dump(Statement *self, int indent, bool with_trailing) {
     break;
   case STATEMENT_PRINT:
     outf("<PRINT %s>\n", this.klass.print.string);
+    break;
+  case STATEMENT_SYSTEM:
+    outf("<SYSTEM %s>\n", this.klass.system.string);
     break;
   }
   if (with_trailing && this.next)

@@ -11,10 +11,12 @@ typedef enum {
   CONDITIONAL_LOGIC_AND,
   CONDITIONAL_LOGIC_NOT,
   CONDITIONAL_STRING_MATCH,
+  CONDITIONAL_STRING_CONTAINS,
   CONDITIONAL_REGEX_MATCH,
   CONDITIONAL_WINDOWTYPE,
   CONDITIONAL_WINDOWSTATE,
   CONDITIONAL_STACKPOSITION,
+  CONDITIONAL_SYSTEM,
 } conditional_type;
 
 typedef enum {
@@ -67,6 +69,10 @@ struct Conditional {
       unsigned int number;
     } stackposition;
 
+    struct {
+      char string[1];
+    } system;
+
   } klass;
 };
 
@@ -76,10 +82,12 @@ Conditional* conditional_logic_new(conditional_type, Conditional*, Conditional*)
 #define      conditional_logic_and_new(A,B) conditional_logic_new(CONDITIONAL_LOGIC_AND, A, B)
 #define      conditional_logic_or_new(A,B)  conditional_logic_new(CONDITIONAL_LOGIC_OR, A, B)
 Conditional* conditional_string_match_new(WSWindowString, const char*);
+Conditional* conditional_string_contains_new(WSWindowString, const char*);
 Conditional* conditional_regex_match_new(WSWindowString, const char*);
 Conditional* conditional_windowtype_new(WnckWindowType);
 Conditional* conditional_windowstate_new(WnckWindowState);
 Conditional* conditional_stackposition_new(comparison_type, unsigned int);
+Conditional* conditional_system_new(const char*);
 
 // Methods
 bool conditional_check(Conditional*, WnckWindow*);

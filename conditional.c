@@ -1,4 +1,5 @@
 #include "conditional.h"
+#include "system.h"
 #include "common.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -11,34 +12,39 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
   int cmp;
   const char *str;
   switch (this.type) {
-  case CONDITIONAL_LOGIC_NOT:
-    return!conditional_check(this.klass.logic.a, win);
-  case CONDITIONAL_LOGIC_OR:
-    return conditional_check(this.klass.logic.a, win) || conditional_check(this.klass.logic.b, win);
-  case CONDITIONAL_LOGIC_AND:
-    return conditional_check(this.klass.logic.a, win) && conditional_check(this.klass.logic.b, win);
-  case CONDITIONAL_STRING_MATCH:
+    case CONDITIONAL_LOGIC_NOT:
+      return!conditional_check(this.klass.logic.a, win);
+    case CONDITIONAL_LOGIC_OR:
+      return conditional_check(this.klass.logic.a, win) || conditional_check(this.klass.logic.b, win);
+    case CONDITIONAL_LOGIC_AND:
+      return conditional_check(this.klass.logic.a, win) && conditional_check(this.klass.logic.b, win);
+    case CONDITIONAL_STRING_MATCH:
       str = window_get_string(win, this.klass.string_match.field);
-      return str && !strcmp(this.klass.string_match.string, str);
-  case CONDITIONAL_REGEX_MATCH:
+      return str && !strcmp(str, this.klass.string_match.string);
+    case CONDITIONAL_STRING_CONTAINS:
+      str = window_get_string(win, this.klass.string_match.field);
+      return str && strstr(str, this.klass.string_match.string);
+    case CONDITIONAL_REGEX_MATCH:
       str = window_get_string(win, this.klass.string_match.field);
       return str && !regexec(&this.klass.regex_match.regex, str, 0, 0, 0);
-  case CONDITIONAL_WINDOWTYPE:
-    return wnck_window_get_window_type(win) == this.klass.windowtype.type;
-  case CONDITIONAL_WINDOWSTATE:
-    return wnck_window_get_state(win) & this.klass.windowstate.state;
-  case CONDITIONAL_STACKPOSITION:
+    case CONDITIONAL_WINDOWTYPE:
+      return wnck_window_get_window_type(win) == this.klass.windowtype.type;
+    case CONDITIONAL_WINDOWSTATE:
+      return wnck_window_get_state(win) & this.klass.windowstate.state;
+    case CONDITIONAL_STACKPOSITION:
       cmp = window_get_stackposition(win) - this.klass.stackposition.number;
       switch (this.klass.stackposition.comparison) {
-      case COMPARE_EQUAL:         return cmp == 0;
-      case COMPARE_UNEQUAL:       return cmp != 0;
-      case COMPARE_LESS:          return cmp <  0;
-      case COMPARE_LESS_EQUAL:    return cmp <= 0;
-      case COMPARE_GREATER:       return cmp >  0;
-      case COMPARE_GREATER_EQUAL: return cmp >= 0;
-      default: abort();
-    }
-  default: abort();
+        case COMPARE_EQUAL:         return cmp == 0;
+        case COMPARE_UNEQUAL:       return cmp != 0;
+        case COMPARE_LESS:          return cmp <  0;
+        case COMPARE_LESS_EQUAL:    return cmp <= 0;
+        case COMPARE_GREATER:       return cmp >  0;
+        case COMPARE_GREATER_EQUAL: return cmp >= 0;
+        default: abort();
+      }
+    case CONDITIONAL_SYSTEM:
+      return system_with_winenv(this.klass.system.string, win);
+    default: abort();
   }
 }
 
@@ -81,6 +87,13 @@ Conditional* conditional_string_match_new(WSWindowString field, const char *stri
   return self;
 }
 
+Conditional* conditional_string_contains_new(WSWindowString field, const char *string) {
+  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_MATCH, strlen(string));
+  this.klass.string_match.field = field;
+  strcpy(this.klass.string_match.string, string);
+  return self;
+}
+
 Conditional* conditional_regex_match_new(WSWindowString field, const char *string) {
   CREATE_SELF(CONDITIONAL_REGEX_MATCH);
   this.klass.regex_match.field = field;
@@ -113,6 +126,12 @@ Conditional* conditional_stackposition_new(comparison_type comparison, unsigned 
   return self;
 }
 
+Conditional* conditional_system_new(const char *string) {
+  CREATE_SELF_PLUS_SPACE(CONDITIONAL_SYSTEM, strlen(string));
+  strcpy(this.klass.system.string, string);
+  return self;
+}
+
 #if DEBUG
 void conditional_dump(Conditional* self, int indent) {
   #define outf(FMT, ...) \
@@ -135,6 +154,9 @@ void conditional_dump(Conditional* self, int indent) {
   case CONDITIONAL_STRING_MATCH:
     outf("<STRING_MATCH %d %s>\n", this.klass.string_match.field, this.klass.string_match.string);
     break;
+  case CONDITIONAL_STRING_CONTAINS:
+    outf("<STRING_CONTAINS %d %s>\n", this.klass.string_match.field, this.klass.string_match.string);
+    break;
   case CONDITIONAL_REGEX_MATCH:
     outf("<REGEX_MATCH %d>\n", this.klass.regex_match.field);
     break;
@@ -147,14 +169,17 @@ void conditional_dump(Conditional* self, int indent) {
   case CONDITIONAL_STACKPOSITION:
     outf("<WINDOW_STACKPOSITION ");
     switch (this.klass.stackposition.comparison) {
-    case COMPARE_EQUAL:         printf("=="); break;
-    case COMPARE_UNEQUAL:       printf("!="); break;
-    case COMPARE_LESS:          printf("<");  break;
-    case COMPARE_LESS_EQUAL:    printf("<="); break;
-    case COMPARE_GREATER:       printf(">");  break;
-    case COMPARE_GREATER_EQUAL: printf(">="); break;
+      case COMPARE_EQUAL:         printf("=="); break;
+      case COMPARE_UNEQUAL:       printf("!="); break;
+      case COMPARE_LESS:          printf("<");  break;
+      case COMPARE_LESS_EQUAL:    printf("<="); break;
+      case COMPARE_GREATER:       printf(">");  break;
+      case COMPARE_GREATER_EQUAL: printf(">="); break;
     }
     printf(" %d>\n", this.klass.stackposition.number);
+    break;
+  case CONDITIONAL_SYSTEM:
+    outf("<SYSTEM %s>\n", this.klass.system.string);
     break;
   }
 }
