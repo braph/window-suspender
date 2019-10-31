@@ -95,6 +95,7 @@ const char* windump(WnckWindow *win) {
 
     const char
       *title = wnck_window_get_name(win),
+      *icon_name = wnck_window_get_icon_name(win),
       *klass = wnck_window_get_class_group_name(win),
       *group = wnck_window_get_class_instance_name(win),
       *type  = window_type_to_str(wnck_window_get_window_type(win)),
@@ -113,8 +114,8 @@ const char* windump(WnckWindow *win) {
       strcpy(&title_truncated[MAXLEN/2 + 3], title + (title_len - MAXLEN/2 + 3));
     }
 
-    snprintf(buf, sizeof(buf), "(PID=%d class=%s group=%s [%d]{%d}) \"%s\" type=%s states={%s}",
-      pid, klass, group, number, stack_pos, title_truncated, type, states);
+    snprintf(buf, sizeof(buf), "(PID=%d class=%s group=%s icon_name=%s, [%d]{%d}) \"%s\" type=%s states={%s}",
+      pid, klass, group, icon_name, number, stack_pos, title_truncated, type, states);
 
     free(title_truncated);
     return buf;

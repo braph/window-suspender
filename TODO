@@ -1,3 +1,4 @@
 - Workspace stuff (check if a window is present on current workspace, etc...)
 - Error handling (e.g. invalid regexes)
 - Hints for syntax errors
+- Warning message for colliding suspend-commands

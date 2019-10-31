@@ -55,12 +55,15 @@
 #
 #    String or RegEx matching:
 #      (<FIELD> == <STRING>), (<FIELD> != <STRING>),
+#      (<FIELD> contains <STRING>),
 #      (<FIELD> =~ <REGEX>), (<FIELD> !~ <REGEX>)
 #
 #      Available fields for string comparison
 #        title
+#        role
 #        groupname
 #        classname
+#        iconname
 #
 #
 #    Matching against the stack position of the window:
@@ -92,6 +95,8 @@
 #       $WINDOW_CLASS
 #       $WINDOW_GROUP
 #       $WINDOW_TYPE
+#       $WINDOW_ROLE
+#       $WINDOW_ICON_NAME
 #       $WINDOW_STATE - Comma separated list of states
 #       $WINDOW_PID
 #       $WINDOW_STACKPOSITION
@@ -131,17 +136,23 @@
 
 (state == minimized) {
   suspend;
+  return;
 }
 
+# Never suspend a Browser that's playing Youtube
 (classname == 'bnox' && title contains "YouTube") {
   return;
 }
 
+# Suspend windows that are not directly in the foreground
 (stackposition >= 1) {
+  system 'echo Suspending PID=$WINDOW_PID $WINDOW_TITLE';
   suspend --suspend-delay 1000 --refresh-delay 5000 --refresh-duration 100;
+  return;
 }
 
 return;
 
+system 'env|grep WINDOW';
 system 'echo PID=$WINDOW_PID class=$WINDOW_CLASS, group=$WINDOW_GROUP [$WINDOW_DESKTOP]{$WINDOW_STACKPOSITION} $WINDOW_TITLE type=$WINDOW_TYPE states=$WINDOW_STATE';
 

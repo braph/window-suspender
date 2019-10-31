@@ -16,6 +16,7 @@ Statement *parse_config(const char*); /* y.tab.c */
 static gboolean on_quit(gpointer loop) {
   restore_processes();
   g_main_loop_quit((GMainLoop*) loop);
+  statement_free(config);
   return true;
 }
 
@@ -30,6 +31,7 @@ int main(int argc, char *argv[]) {
 
   GMainLoop *loop = g_main_loop_new(NULL, FALSE);
   const char *config_file = "./window-suspender.rc";
+  verbosity = 1;
 
 OPTS:
   switch (getopt(argc, argv, "hc:")) {
@@ -43,10 +45,9 @@ OPTS:
     default: return 1;
   }
 
-  config = parse_config(config_file);
-  if (! config) {
+  if (! (config = parse_config(config_file)))
     return 1;
-  }
+
   if (DEBUG)
     statement_dump(config, 0, true);
 

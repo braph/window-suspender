@@ -20,13 +20,13 @@ int yylex();
 int yyparse();
 extern FILE *yyin;
 extern int yylineno;
-static int failed;
-static Statement root;
+static Statement *config;
+static int parsing_error;
 
 void yyerror(const char *str)
 {
   printerr("Error: %s (line :%d)\n", str, yylineno);
-  failed = 1;
+  parsing_error = 1;
 }
 
 int yywrap()
@@ -35,14 +35,21 @@ int yywrap()
 }
 
 Statement* parse_config(const char *file) {
+  config = NULL;
+  parsing_error = 0;
   if (! (yyin = fopen(file, "r"))) {
     printerr("Error: %s: %s\n", file, strerror(errno));
     return NULL;
   }
-  failed = 0;
   yyparse();
   fclose(yyin);
-  return (failed ? NULL : &root);
+  if (parsing_error) {
+    if (config) {
+      statement_free(config);
+      config = NULL;
+    }
+  }
+  return config;
 }
 
 %}
@@ -83,7 +90,8 @@ Statement* parse_config(const char *file) {
 %%
 
 config
-    : statement_list { root.next = $1; }
+    : /*empty*/      { config = statement_return_new(); /*empty*/ }
+    | statement_list { config = $1; }
     ;
 
 numeric_comparison

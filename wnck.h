@@ -1,9 +1,7 @@
 #ifndef _WNCK_H
 #define _WNCK_H
 
-#ifndef WNCK_I_KNOW_THIS_IS_UNSTABLE
-#define WNCK_I_KNOW_THIS_IS_UNSTABLE 1
-#endif
+#define WNCK_I_KNOW_THIS_IS_UNSTABLE
 #include <libwnck/libwnck.h>
 
 /* ============================================================================

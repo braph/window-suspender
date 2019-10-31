@@ -31,7 +31,9 @@ typedef enum {
 typedef enum {
   WINDOW_TITLE,
   WINDOW_CLASS,
-  WINDOW_GROUP
+  WINDOW_GROUP,
+  WINDOW_ROLE,
+  WINDOW_ICON_NAME,
 } WSWindowString;
 
 struct Conditional;
@@ -101,6 +103,8 @@ void conditional_free(Conditional*);
   (FIELD == WINDOW_TITLE ? wnck_window_get_name(WIN) : \
   (FIELD == WINDOW_GROUP ? wnck_window_get_class_instance_name(WIN) : \
   (FIELD == WINDOW_CLASS ? wnck_window_get_class_group_name(WIN) : \
-   NULL)))
+  (FIELD == WINDOW_ROLE  ? wnck_window_get_role(WIN) : \
+  (FIELD == WINDOW_ICON_NAME ? wnck_window_get_icon_name(WIN) : \
+   NULL)))))
 
 #endif

@@ -6,7 +6,6 @@
 #include "conditional.h"
 
 typedef enum {
-  STATEMENT_ROOT = 0, // INTERNAL
   STATEMENT_IF,
   STATEMENT_PRINT,
   STATEMENT_SYSTEM,

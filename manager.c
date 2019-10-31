@@ -75,6 +75,7 @@ void resume_process(int pid) {
       if (jobs[i].event_id)
         g_source_remove(jobs[i].event_id);
       jobs[i].pid = 0;
+      verbose("Sending SIGCONT to process %d\n", pid); 
       kill(pid, SIGCONT);
       break;
     }
