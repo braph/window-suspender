@@ -8,7 +8,10 @@
 
 #define USAGE \
   "Usage: %s [-v] [-c CONFIG]\n" \
-  "Suspend windows according to configured rules\n"
+  "Suspend windows according to configured rules\n" \
+  "-v   log verbose\n" \
+  "-vv  log events\n" \
+  "-vvv log signals\n"
 
 Statement *config;
 Statement *parse_config(const char*); /* y.tab.c */

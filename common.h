@@ -5,6 +5,13 @@
 
 extern int verbosity;
 
+typedef enum {
+  LOG_SILENT = 0,
+  LOG_VERBOSE,
+  LOG_EVENT,
+  LOG_SIGNAL,
+} LogLevel;
+
 #ifndef DEBUG
 #define DEBUG 0
 #endif
@@ -17,8 +24,13 @@ extern int verbosity;
     printerr(__VA_ARGS__); \
 } while(0)
 
-#define log_event(...) \
-  verbose(__VA_ARGS__)
+#define log_event(...) do { \
+  if (verbosity >= LOG_EVENT) printerr(__VA_ARGS__); \
+} while(0)
+
+#define log_signal(...) do { \
+  if (verbosity >= LOG_SIGNAL) printerr(__VA_ARGS__); \
+} while(0)
 
 #if DEBUG
 

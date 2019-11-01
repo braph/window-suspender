@@ -44,16 +44,16 @@ Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
 void kill_wnck_application(WnckApplication* wnck_app, int sig) {
   int pid = wnck_application_get_pid(wnck_app);
   if (! pid) {
-    verbose("kill_wnck_application: PID is 0");
+    log_signal("kill_wnck_application: PID is 0");
     return;
   }
-  verbose("Sending %s to %d \"%s\"\n", (sig == SIGCONT ? "SIGCONT" : "SIGSTOP"),
+  log_signal("Sending %s to %d \"%s\"\n", (sig == SIGCONT ? "SIGCONT" : "SIGSTOP"),
       pid, wnck_application_get_name(wnck_app));
   kill(pid, sig);
 }
 
 void application_cancel_timeout(Application* app) {
-  verbose("Removing timeout source %d\n", app->timeout_id);
+  debug("Removing timeout source %d\n", app->timeout_id);
   g_source_remove(app->timeout_id);
   app->timeout_id = 0;
   app->state = STATE_UNHANDELED;
@@ -130,7 +130,7 @@ void restore_processes() {
 }
 
 static gboolean suspend_callback(Application *app) {
-  verbose("suspend_callback: %d\n", app->timeout_id);
+  debug("suspend_callback: %d\n", app->timeout_id);
   kill_wnck_application(app->wnck_app, SIGSTOP);
   app->state = STATE_SUSPENDED;
   if (app->refresh_delay)
@@ -141,7 +141,7 @@ static gboolean suspend_callback(Application *app) {
 }
 
 static gboolean refresh_callback(Application *app) {
-  verbose("refresh_callback: %d\n", app->timeout_id);
+  debug("refresh_callback: %d\n", app->timeout_id);
   kill_wnck_application(app->wnck_app, SIGCONT);
   app->timeout_id = G_TIMEOUT_ADD(app->refresh_duration, (GSourceFunc) suspend_callback, app);
   return false;
@@ -156,6 +156,7 @@ static gboolean refresh_callback(Application *app) {
 
 /* Apply the configured rules to an application and its windows */
 static void application_apply_rules(WnckApplication *app) {
+  verbose("application::apply_rules\n");
   wnck_application_dump(app);
   WnckWindow *win;
   Statement suspend_stmt = {
@@ -172,9 +173,6 @@ static void application_apply_rules(WnckApplication *app) {
 
     // Execute all statements except the suspend statement.
     for (unsigned int j = 0; j < statements.size; ++j) {
-      if (DEBUG)
-        statement_dump(statements.list[j], 0, 0);
-
       if (statements.list[j]->type == STATEMENT_SUSPEND) {
         have_suspend = true;
         // Choose highest suspend_delay
@@ -201,7 +199,6 @@ static void application_apply_rules(WnckApplication *app) {
 
     if (! have_suspend) {
       // One window didn't match the criteria for suspend, do a resume instead
-      verbose("Resume %s (no suspend match)\n", windump(win));
       suspend_stmt.type = STATEMENT_RESUME;
     }
   }
@@ -212,7 +209,7 @@ static void application_apply_rules(WnckApplication *app) {
 
 /* Apply the configuration rules to all applications of the screen */
 static void screen_apply_rules() {
-  debug("screen::apply_rules()\n");
+  verbose("screen::apply_rules()\n");
   for (GSList *l = applications; l; l = l->next)
     application_apply_rules(((Application*) l->data)->wnck_app);
 }
@@ -220,7 +217,7 @@ static void screen_apply_rules() {
 /* ============================================================================
  * Window Signals
  *
- * Code for (dis-)connecting window events.
+ * Code for connecting window events.
  * ==========================================================================*/
 
 static void on_win_signal(WnckWindow* window, gpointer signame) {
@@ -235,7 +232,9 @@ static void on_window_state_changed(WnckWindow* window,
     WnckWindowState new_state,
     gpointer self)
 {
-  on_win_signal(window, "state-changed");
+  // XXX: If window state changes to `above` we have to apply rules to all apps
+  screen_apply_rules();
+  //on_win_signal(window, "state-changed");
 }
 
 static void window_connect_signals(WnckWindow *win) {
@@ -250,6 +249,7 @@ static void window_connect_signals(WnckWindow *win) {
   //g_signal_connect(win, "geometry_changed", ...)
 }
 
+#if 0 /* LibWnck disconnects these signals automatically */
 static void window_disconnect_signals(WnckWindow *win) {
   guint i;
   g_signal_parse_name("class-changed", wnck_window_get_type(), &i, NULL, FALSE);
@@ -267,11 +267,12 @@ static void window_disconnect_signals(WnckWindow *win) {
   g_signal_parse_name("state-changed", wnck_window_get_type(), &i, NULL, FALSE);
   g_signal_handler_disconnect(win, i);
 }
+#endif
 
 /* ============================================================================
  * Screen Signals
  *
- * Code for dis/connecting screen events.
+ * Code for connecting screen events.
  * ==========================================================================*/
 
 // === Applications ===
@@ -298,11 +299,14 @@ static void on_window_opened(WnckScreen* screen, WnckWindow* window, gpointer se
   screen_apply_rules();
 }
 
+#if 0 /* on_window_stacking_changed() will do the work.
+         calling this also results in an error */
 static void on_window_closed(WnckScreen* screen, WnckWindow* window, gpointer self) {
   log_event("\nmanager::on_window_closed(): %s\n", windump(window));
   window_disconnect_signals(window);
   screen_apply_rules();
 }
+#endif
 
 // === Window Stacking ===
 static void on_window_stacking_changed(WnckScreen* screen, gpointer self) {
@@ -310,8 +314,7 @@ static void on_window_stacking_changed(WnckScreen* screen, gpointer self) {
   screen_apply_rules();
 }
 
-#if 0
-// Don't need this. (on_window_stacking_changed() did the work already)
+#if 0 /* on_window_stacking_changed() will do the work */
 static void on_active_window_changed(WnckScreen* screen, WnckWindow* prev, gpointer self) {
   log_event("\nmanager::on_active_window_changed()\n");
   screen_apply_rules();
@@ -338,8 +341,9 @@ void manager_init() {
 
   // Windows
   g_signal_connect(screen, "window-opened", (GCallback) on_window_opened, NULL);
-  g_signal_connect(screen, "window-closed", (GCallback) on_window_closed, NULL);
+  //g_signal_connect(screen, "window-closed", (GCallback) on_window_closed, NULL);
   g_signal_connect(screen, "window-stacking-changed", (GCallback) on_window_stacking_changed, NULL);
+  g_signal_connect(screen, "active-window-changed", (GCallback) on_window_stacking_changed, NULL);
 
   // Workspaces
   g_signal_connect(screen, "active-workspace-changed", (GCallback) on_active_workspace_changed, NULL);

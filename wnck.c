@@ -46,21 +46,23 @@ const char* window_state_to_str(WnckWindowState state) {
 }
 
 const char *window_states_to_str(WnckWindowState state) {
-  static char *str = 0;
-  free(str);
-  str = 0;
+  static char str[256];
+  const char *tmp;
 
-  const char *tmp = window_state_to_str(state);
-  if (tmp)
+  if (!state)
+    return "";
+  else if ((tmp = window_state_to_str(state)))
     return tmp;
 
-  str = malloc(1024);
   str[0] = '\0';
-  for (unsigned int i = 0; i <= WNCK_WINDOW_STATE_MAX; ++i) {
-    if (state & (1 << i) && (tmp = window_state_to_str(1 << i))) {
-      if (str[0])
-        strcat(str, ",");
-      strcat(str, tmp);
+  for (unsigned int i = 0; state && i <= WNCK_WINDOW_STATE_MAX; ++i) {
+    if (state & (1 << i)) {
+      state |= (1 << i);
+      if ((tmp = window_state_to_str(1 << i))) {
+        if (str[0])
+          strcat(str, ",");
+        strcat(str, tmp);
+      }
     }
   }
 
@@ -71,14 +73,21 @@ const char *window_states_to_str(WnckWindowState state) {
  * window_get_stackposition()
  * ==========================================================================*/
 
+// TODO: Make this a configurable option?
+#define option_ignore_above 1
+
 unsigned int window_get_stackposition(WnckWindow *win) {
   unsigned int size = 0;
   unsigned int index = 0;
   for (GList* l = wnck_screen_get_windows_stacked(screen); l; l = l->next) {
-    ++size;
+    if (option_ignore_above && wnck_window_is_above((WnckWindow*) l->data))
+      /* ignore */;
+    else
+      ++size;
     if (win == l->data)
       index = size;
   }
+
   return size - index;
 }
 
@@ -95,7 +104,6 @@ const char* windump(WnckWindow *win) {
 
     const char
       *title = wnck_window_get_name(win),
-      *icon_name = wnck_window_get_icon_name(win),
       *klass = wnck_window_get_class_group_name(win),
       *group = wnck_window_get_class_instance_name(win),
       *type  = window_type_to_str(wnck_window_get_window_type(win)),
@@ -114,8 +122,8 @@ const char* windump(WnckWindow *win) {
       strcpy(&title_truncated[MAXLEN/2 + 3], title + (title_len - MAXLEN/2 + 3));
     }
 
-    snprintf(buf, sizeof(buf), "(PID=%d class=%s group=%s icon_name=%s, [%d]{%d}) \"%s\" type=%s states={%s}",
-      pid, klass, group, icon_name, number, stack_pos, title_truncated, type, states);
+    snprintf(buf, sizeof(buf), "\"%s\" CLASS=%s GROUP=%s [%d]{%d} PID=%d TYPE=%s STATES=%s",
+      title_truncated, klass, group, number, stack_pos, pid, type, states);
 
     free(title_truncated);
     return buf;
@@ -126,8 +134,8 @@ const char* windump(WnckWindow *win) {
  * ==========================================================================*/
 
 void wnck_application_dump(WnckApplication *app) {
-  debug("[ Application PID=%d ]\n", wnck_application_get_pid(app));
+  printerr("[ Application PID=%d ]\n", wnck_application_get_pid(app));
   for (GList *l = wnck_application_get_windows(app); l; l = l->next)
-    debug("   `- %s\n", windump(l->data));
+    printerr(" `- %s\n", windump(l->data));
 }
 
