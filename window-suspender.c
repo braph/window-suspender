@@ -7,7 +7,7 @@
 #include "statement.h"
 
 #define USAGE \
-  "Usage: %s [-c CONFIG]\n" \
+  "Usage: %s [-v] [-c CONFIG]\n" \
   "Suspend windows according to configured rules\n"
 
 Statement *config;
@@ -31,12 +31,14 @@ int main(int argc, char *argv[]) {
 
   GMainLoop *loop = g_main_loop_new(NULL, FALSE);
   const char *config_file = "./window-suspender.rc";
-  verbosity = 1;
 
 OPTS:
-  switch (getopt(argc, argv, "hc:")) {
+  switch (getopt(argc, argv, "hvc:")) {
     case 'c':
       config_file = optarg;
+      goto OPTS;
+    case 'v':
+      verbosity++;
       goto OPTS;
     case 'h':
       printf(USAGE, argv[0]);

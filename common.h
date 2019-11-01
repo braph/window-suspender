@@ -17,13 +17,19 @@ extern int verbosity;
     printerr(__VA_ARGS__); \
 } while(0)
 
+#define log_event(...) \
+  verbose(__VA_ARGS__)
+
 #if DEBUG
 
+#include <assert.h>
 #define debug(...) \
   printerr(__VA_ARGS__)
 
 #else // DEBUG
 
+#define assert(...) \
+  ((void)0)
 #define debug(...) \
   ((void)0)
 

@@ -22,7 +22,7 @@ bool statement_get_matched(Statement *self, WnckWindow *win, StatementList *list
     return false;
   default:
     if (list->size == list->allocated) {
-      list->allocated += 2;
+      list->allocated += 8;
       list->list = realloc(list->list, sizeof(Statement*) * list->allocated);
     }
     list->list[list->size++] = self;
@@ -44,14 +44,14 @@ void statement_execute(Statement *self, WnckWindow *win) {
     system_with_winenv(this.klass.system.string, win);
     break;
   case STATEMENT_SUSPEND:
-    suspend_process(
-       wnck_window_get_pid(win),
+    window_suspend(
+       win,
        this.klass.suspend.suspend_delay,
        this.klass.suspend.refresh_delay,
        this.klass.suspend.refresh_duration);
     break;
   case STATEMENT_RESUME:
-    resume_process(wnck_window_get_pid(win));
+    window_resume(win);
     break;
   default:
     break; /* -Wpedantic */
