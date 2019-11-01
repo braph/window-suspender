@@ -30,25 +30,25 @@ static void attach_signal(GMainLoop *loop, int sig) {
 }
 
 int main(int argc, char *argv[]) {
-  gdk_init(&argc, &argv);
-
-  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
   const char *config_file = "./window-suspender.rc";
 
-OPTS:
+OPT:
   switch (getopt(argc, argv, "hvc:")) {
     case 'c':
       config_file = optarg;
-      goto OPTS;
+      goto OPT;
     case 'v':
       verbosity++;
-      goto OPTS;
+      goto OPT;
     case 'h':
       printf(USAGE, argv[0]);
       return 0;
     case -1: break;
     default: return 1;
   }
+
+  gdk_init(&argc, &argv);
+  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
 
   if (! (config = parse_config(config_file)))
     return 1;

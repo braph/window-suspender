@@ -12,6 +12,7 @@ typedef enum {
   STATEMENT_RETURN,
   STATEMENT_SUSPEND,
   STATEMENT_RESUME, // INTERNAL
+  STATEMENT_NOOP,
 } statement_type;
 
 struct Statement;
@@ -53,6 +54,7 @@ Statement* statement_return_new();
 Statement* statement_print_new(const char*);
 Statement* statement_system_new(const char*);
 Statement* statement_suspend_new(unsigned int, unsigned int, unsigned int);
+Statement* statement_noop_new();
 
 // Methods
 bool statement_get_matched(Statement*, WnckWindow*, StatementList*);

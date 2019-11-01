@@ -20,6 +20,8 @@ bool statement_get_matched(Statement *self, WnckWindow *win, StatementList *list
     break;
   case STATEMENT_RETURN:
     return false;
+  case STATEMENT_NOOP:
+    break;
   default:
     if (list->size == list->allocated) {
       list->allocated += 8;
@@ -44,8 +46,7 @@ void statement_execute(Statement *self, WnckWindow *win) {
     system_with_winenv(this.klass.system.string, win);
     break;
   case STATEMENT_SUSPEND:
-    window_suspend(
-       win,
+    window_suspend(win,
        this.klass.suspend.suspend_delay,
        this.klass.suspend.refresh_delay,
        this.klass.suspend.refresh_duration);
@@ -113,6 +114,11 @@ Statement* statement_suspend_new(unsigned int suspend_delay, unsigned int refres
   return self;
 }
 
+Statement* statement_noop_new() {
+  CREATE_SELF(STATEMENT_NOOP);
+  return self;
+}
+
 #if DEBUG
 void statement_dump(Statement *self, int indent, bool with_trailing) {
   #define outf(FMT, ...) \
@@ -120,26 +126,30 @@ void statement_dump(Statement *self, int indent, bool with_trailing) {
 
   switch (this.type) {
   case STATEMENT_IF:
-    outf("<IF>\n");
-    conditional_dump(this.klass._if.conditional, indent+4);
-    outf("<THEN>\n");
+    outf("(");
+    conditional_dump(this.klass._if.conditional);
+    printf(")\n");
+    outf("{\n");
     statement_dump(this.klass._if.statement, indent+4, with_trailing);
-    outf("<ENDIF>\n");
+    outf("}\n");
     break;
   case STATEMENT_RETURN:
-    outf("<RETURN>\n");
+    outf("return;\n");
     break;
   case STATEMENT_SUSPEND:
-    outf("<SUSPEND suspend_delay=%u, refresh_delay=%u, refresh_duration=%u>\n",
+    outf("suspend --suspend_delay=%u --refresh_delay=%u --refresh_duration=%u;\n",
         this.klass.suspend.suspend_delay,
         this.klass.suspend.refresh_delay,
         this.klass.suspend.refresh_duration);
     break;
   case STATEMENT_PRINT:
-    outf("<PRINT %s>\n", this.klass.print.string);
+    outf("print \"%s\";\n", this.klass.print.string);
     break;
   case STATEMENT_SYSTEM:
-    outf("<SYSTEM %s>\n", this.klass.system.string);
+    outf("system \"%s\";\n", this.klass.system.string);
+    break;
+  case STATEMENT_NOOP:
+    outf("NOOP;\n");
     break;
   }
   if (with_trailing && this.next)

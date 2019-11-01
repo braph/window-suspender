@@ -93,7 +93,7 @@ Conditional* conditional_system_new(const char*);
 
 // Methods
 bool conditional_check(Conditional*, WnckWindow*);
-void conditional_dump(Conditional*, int);
+void conditional_dump(Conditional*);
 
 // Destructor
 void conditional_free(Conditional*);
@@ -105,6 +105,14 @@ void conditional_free(Conditional*);
   (FIELD == WINDOW_CLASS ? wnck_window_get_class_group_name(WIN) : \
   (FIELD == WINDOW_ROLE  ? wnck_window_get_role(WIN) : \
   (FIELD == WINDOW_ICON_NAME ? wnck_window_get_icon_name(WIN) : \
+   NULL)))))
+
+#define window_field_to_string(FIELD) \
+  (FIELD == WINDOW_TITLE ? "title" : \
+  (FIELD == WINDOW_GROUP ? "groupname" : \
+  (FIELD == WINDOW_CLASS ? "classname" : \
+  (FIELD == WINDOW_ROLE  ? "role" : \
+  (FIELD == WINDOW_ICON_NAME ? "iconname" : \
    NULL)))))
 
 #endif

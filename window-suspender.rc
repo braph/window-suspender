@@ -147,7 +147,7 @@
 # Suspend windows that are not directly in the foreground
 (stackposition >= 1) {
   system 'echo Suspending PID=$WINDOW_PID $WINDOW_TITLE {$WINDOW_STACKPOSITION}';
-  suspend --suspend-delay 0 --refresh-delay 5000 --refresh-duration 100;
+  suspend --suspend-delay 0 --refresh-delay 1000 --refresh-duration 1;
   return;
 }
 

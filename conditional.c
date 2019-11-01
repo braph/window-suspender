@@ -40,7 +40,6 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
         case COMPARE_LESS_EQUAL:    return cmp <= 0;
         case COMPARE_GREATER:       return cmp >  0;
         case COMPARE_GREATER_EQUAL: return cmp >= 0;
-        default: abort();
       }
     case CONDITIONAL_SYSTEM:
       return system_with_winenv(this.klass.system.string, win);
@@ -133,53 +132,49 @@ Conditional* conditional_system_new(const char *string) {
 }
 
 #if DEBUG
-void conditional_dump(Conditional* self, int indent) {
-  #define outf(FMT, ...) \
-    printf("%*s" FMT, indent, "", ##__VA_ARGS__) 
-
+void conditional_dump(Conditional* self) {
+#define o(...) printf(__VA_ARGS__);
   switch (this.type) {
   case CONDITIONAL_LOGIC_NOT:
-    outf("<NOT>\n");
-    conditional_dump(this.klass.logic.a, indent+4);
-    outf("</NOT>\n");
+    o("!(");
+    conditional_dump(this.klass.logic.a);
+    o(")");
     break;
   case CONDITIONAL_LOGIC_OR:
   case CONDITIONAL_LOGIC_AND:
-    outf("<%s>\n", (this.type == CONDITIONAL_LOGIC_OR ? "OR" : "AND"));
-    conditional_dump(this.klass.logic.a, indent+4);
-    outf("<... %s ...>\n", (this.type == CONDITIONAL_LOGIC_OR ? "OR" : "AND"));
-    conditional_dump(this.klass.logic.b, indent+4);
-    outf("</%s>\n", (this.type == CONDITIONAL_LOGIC_OR ? "OR" : "AND"));
+    o("(");
+    conditional_dump(this.klass.logic.a);
+    o(" %s ", (this.type == CONDITIONAL_LOGIC_OR ? "||" : "&&"));
+    conditional_dump(this.klass.logic.b);
+    o(")");
     break;
   case CONDITIONAL_STRING_MATCH:
-    outf("<STRING_MATCH %d %s>\n", this.klass.string_match.field, this.klass.string_match.string);
+    o("%s == %s", window_field_to_string(this.klass.string_match.field), this.klass.string_match.string);
     break;
   case CONDITIONAL_STRING_CONTAINS:
-    outf("<STRING_CONTAINS %d %s>\n", this.klass.string_match.field, this.klass.string_match.string);
+    o("%s contains %s", window_field_to_string(this.klass.string_match.field), this.klass.string_match.string);
     break;
   case CONDITIONAL_REGEX_MATCH:
-    outf("<REGEX_MATCH %d>\n", this.klass.regex_match.field);
+    o("%s =~ $regex", window_field_to_string(this.klass.regex_match.field));
     break;
   case CONDITIONAL_WINDOWTYPE:
-    outf("<WINDOW_TYPE %d>\n", this.klass.windowtype.type);
+    o("type == %s", window_type_to_str(this.klass.windowtype.type));
     break;
   case CONDITIONAL_WINDOWSTATE:
-    outf("<WINDOW_STATE %d>\n", this.klass.windowstate.state);
+    o("state == %s", window_state_to_str(this.klass.windowstate.state));
     break;
   case CONDITIONAL_STACKPOSITION:
-    outf("<WINDOW_STACKPOSITION ");
-    switch (this.klass.stackposition.comparison) {
-      case COMPARE_EQUAL:         printf("=="); break;
-      case COMPARE_UNEQUAL:       printf("!="); break;
-      case COMPARE_LESS:          printf("<");  break;
-      case COMPARE_LESS_EQUAL:    printf("<="); break;
-      case COMPARE_GREATER:       printf(">");  break;
-      case COMPARE_GREATER_EQUAL: printf(">="); break;
-    }
-    printf(" %d>\n", this.klass.stackposition.number);
+    o("stackposition %s %d", (char[6][3]) {
+        [COMPARE_EQUAL]         = "==",
+        [COMPARE_UNEQUAL]       = "!=",
+        [COMPARE_LESS]          = "<\0",
+        [COMPARE_LESS_EQUAL]    = "<=",
+        [COMPARE_GREATER]       = ">\0",
+        [COMPARE_GREATER_EQUAL] = ">="    }[this.klass.stackposition.comparison], 
+        this.klass.stackposition.number);
     break;
   case CONDITIONAL_SYSTEM:
-    outf("<SYSTEM %s>\n", this.klass.system.string);
+    o("system \"%s\"", this.klass.system.string);
     break;
   }
 }

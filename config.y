@@ -87,6 +87,10 @@ Statement* parse_config(const char *file) {
 
 %start config
 
+%left AND_AND
+%right OR_OR
+%left NOT
+
 %%
 
 config
@@ -109,8 +113,9 @@ condition
     | COND_STATE EQUAL WINDOW_STATE   { $$ = conditional_windowstate_new($3); }
     | COND_STACKPOSITION numeric_comparison NUMBER { $$ = conditional_stackposition_new($2, $3); }
     | condition AND_AND condition     { $$ = conditional_logic_and_new($1, $3); }
-    | condition OR_OR condition       { $$ = conditional_logic_or_new($1, $3); }
-    | NOT condition                   { $$ = C_NOT($2); }
+    | condition OR_OR condition %prec AND_AND { $$ = conditional_logic_or_new($1, $3); }
+    | NOT condition  %prec OR_OR      { $$ = C_NOT($2); }
+    | '(' condition ')'               { $$ = $2; }
     ;
 
 statement
@@ -140,7 +145,8 @@ suspend_statement
     ;
 
 command_statement
-    : PRINT STRING ';'  { $$ = statement_print_new($2); free($2); }
+    : ';'               { $$ = statement_noop_new(); }
+    | PRINT STRING ';'  { $$ = statement_print_new($2); free($2); }
     | SYSTEM STRING ';' { $$ = statement_system_new($2); free($2); }
     | RETURN ';'        { $$ = statement_return_new(); }
     | suspend_statement ';'

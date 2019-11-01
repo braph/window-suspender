@@ -1,0 +1,46 @@
+# vim: filetype=sh
+
+(system 'echo PASSED');
+
+return;
+
+print 'TEST';
+(
+  (system '! false && true')
+  &&
+  (!system 'false' && system 'true')
+)
+print 'PASSED';
+
+print 'TEST';
+(
+  (system 'echo PASSED || echo FAILED && echo PASSED')
+  &&
+  (system 'echo PASSED' || system 'echo FAILED' && system 'echo PASSED')
+)
+print 'PASSED';
+
+print 'TEST';
+((system 'true') && (system 'true')) {
+  print 'PASSED';
+}
+print 'TEST';
+
+system 'echo TEST:';
+return;
+
+# =============================================================================
+
+(stackposition > 2) {
+  (classname == 'foo') {
+    (title == 'bar' || title == 'bar' && title == 'muh' && title == 'muh') {
+      suspend;
+      return;
+    }
+  }
+}
+
+(!title == 'bar' && !title == 'baz') {
+return;
+}
+
