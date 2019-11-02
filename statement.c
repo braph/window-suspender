@@ -121,13 +121,13 @@ Statement* statement_noop_new() {
 
 void statement_dump(Statement *self, int indent, bool with_trailing) {
   #define outf(FMT, ...) \
-    printf("%*s" FMT, indent, "", ##__VA_ARGS__) 
+    printerr("%*s" FMT, indent, "", ##__VA_ARGS__)
 
   switch (this.type) {
   case STATEMENT_IF:
     outf("(");
     conditional_dump(this.klass._if.conditional);
-    printf(")\n");
+    printerr(")\n");
     outf("{\n");
     statement_dump(this.klass._if.statement, indent+4, with_trailing);
     outf("}\n");

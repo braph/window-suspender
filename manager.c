@@ -56,7 +56,8 @@ static void kill_wnck_application(WnckApplication* wnck_app, int sig) {
 
 static void application_cancel_timeout(Application* app) {
   debug("Removing timeout source %d\n", app->timeout_id);
-  g_source_remove(app->timeout_id);
+  if (app->timeout_id)
+    g_source_remove(app->timeout_id);
   app->timeout_id = 0;
   app->state = STATE_UNHANDELED;
 }
@@ -159,9 +160,8 @@ static gboolean refresh_callback(Application *app) {
 
 /* Apply the configured rules to an application and its windows */
 static void application_apply_rules(WnckApplication *app) {
-  debug("application::apply_rules\n");
-  if (verbosity)
-    wnck_application_dump(app);
+  verbose("[ Application \"%s\" %d ]\n",
+      wnck_application_get_name(app), wnck_application_get_pid(app));
   WnckWindow *win;
   Statement suspend_stmt = {
     .type = STATEMENT_SUSPEND,
@@ -171,6 +171,7 @@ static void application_apply_rules(WnckApplication *app) {
 
   for (GList *l = wnck_application_get_windows(app); l; l = l->next) {
     win = l->data;
+    verbose(" `- %s\n", windump(win));
     statements.size = 0;
     statement_get_matched(config, win, &statements);
     bool have_suspend = false;
@@ -203,20 +204,20 @@ static void application_apply_rules(WnckApplication *app) {
 
     if (! have_suspend) {
       // One window didn't match the criteria for suspend, do a resume instead
-      verbose("--> Window %s prevented to suspend the application\n", windump(win));
+      verbose("    --> No suspend for: %s\n", windump(win));
       suspend_stmt.type = STATEMENT_RESUME;
     }
   }
 
-  verbose("--> Executing on %s:\n", windump(win));
-  if (verbosity) statement_dump(&suspend_stmt, 8, 0);
+  verbose("    --> Executing on: %s\n", windump(win));
+  if (verbosity)
+    statement_dump(&suspend_stmt, 8, 0);
   statement_execute(&suspend_stmt, win);
   free(statements.list);
 }
 
 /* Apply the configuration rules to all applications of the screen */
 static void screen_apply_rules() {
-  debug("screen::apply_rules()\n");
   for (GSList *l = applications; l; l = l->next)
     application_apply_rules(((Application*) l->data)->wnck_app);
 }
@@ -228,7 +229,7 @@ static void screen_apply_rules() {
  * ==========================================================================*/
 
 static void on_win_signal(WnckWindow* window, gpointer signame) {
-  log_event("\nwindow::%s(): %s\n", (char*) signame, windump(window));
+  log_event("window::%s(): %s\n", (char*) signame, windump(window));
   WnckApplication *wnck_app = wnck_window_get_application(window);
   if (wnck_app)
     application_apply_rules(wnck_app);
@@ -288,27 +289,28 @@ static void on_application_opened(WnckScreen* screen, WnckApplication* wnck_app,
   Application *app = calloc(1, sizeof(Application));
   app->wnck_app = wnck_app;
   applications = g_slist_append(applications, app);
-  log_event("\nscreen::on_application_opened(): added %d %s\n",
+  log_event("screen::on_application_opened(): added %d %s\n",
       wnck_application_get_pid(wnck_app), wnck_application_get_name(wnck_app));
 }
 
 static void on_application_closed(WnckScreen* screen, WnckApplication* wnck_app, gpointer unused) {
   Application *app = get_application_for_wnck_application(wnck_app);
+  application_cancel_timeout(app);
   applications = g_slist_remove(applications, app);
   free(app);
-  log_event("\nscreen::on_application_closed(): removed %d %s\n",
+  log_event("screen::on_application_closed(): removed %d %s\n",
       wnck_application_get_pid(wnck_app), wnck_application_get_name(wnck_app));
 }
 
 // === Windows ===
 static void on_window_opened(WnckScreen* screen, WnckWindow* window, gpointer unused) {
-  log_event("\nscreen::on_window_opened(): %s\n", windump(window));
+  log_event("screen::on_window_opened(): %s\n", windump(window));
   window_connect_signals(window);
 }
 
 #if 0
 static void on_window_closed(WnckScreen* screen, WnckWindow* window, gpointer unused) {
-  log_event("\nscreen::on_window_closed(): %s\n", windump(window));
+  log_event("screen::on_window_closed(): %s\n", windump(window));
   window_disconnect_signals(window);
   screen_apply_rules();
 }
@@ -316,26 +318,26 @@ static void on_window_closed(WnckScreen* screen, WnckWindow* window, gpointer un
 
 // === Window Stacking ===
 static void on_window_stacking_changed(WnckScreen* screen, gpointer unused) {
-  log_event("\nscreen::on_window_stacking_changed()\n");
+  log_event("screen::on_window_stacking_changed()\n");
   screen_apply_rules();
 }
 
 #if 0
 static void on_active_window_changed(WnckScreen* screen, WnckWindow* prev, gpointer unused) {
-  log_event("\screen::on_active_window_changed()\n");
+  log_event("screen::on_active_window_changed()\n");
   screen_apply_rules();
 }
 #endif
 
 // === Workspaces ===
 static void on_active_workspace_changed(WnckScreen* screen, WnckWorkspace* prev, gpointer unused) {
-  log_event("\nscreen::on_active_workspace_changed()\n");
+  log_event("screen::on_active_workspace_changed()\n");
   screen_apply_rules();
 }
 
 // === Misc ===
 static void on_showing_desktop_changed(WnckScreen* screen, gpointer unused) {
-  log_event("\nscreen::on_showing_desktop_changed()\n");
+  log_event("screen::on_showing_desktop_changed()\n");
   screen_apply_rules();
 }
 

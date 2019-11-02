@@ -142,7 +142,7 @@ Conditional* conditional_system_new(const char *string) {
 }
 
 void conditional_dump(Conditional* self) {
-#define o(...) printf(__VA_ARGS__);
+#define o(...) printerr(__VA_ARGS__);
   switch (this.type) {
   case CONDITIONAL_LOGIC_NOT:
     o("!(");

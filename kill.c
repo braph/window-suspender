@@ -39,10 +39,8 @@ static int get_ppid(const char *pid) {
   if (n <= 0)
     return 0;
   buf[n] = '\0';
-  const char *tmp, *ppid_str = buf;
-  while ((tmp = strchr(ppid_str, ')')))
-    ppid_str = tmp + 1;
-  if (buf != ppid_str) {
+  const char *ppid_str = strrchr(buf, ')');
+  if (ppid_str) {
     ppid_str = strpbrk(ppid_str, "0123456789");
     if (ppid_str)
       return atoi(ppid_str);

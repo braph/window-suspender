@@ -1,6 +1,8 @@
+#include <pwd.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <glib.h>
 #include <glib-unix.h>
-#include <unistd.h>
 #include "wnck.h"
 #include "common.h"
 #include "manager.h"
@@ -9,12 +11,14 @@
 #define USAGE \
   "Usage: %s [-v] [-c CONFIG]\n" \
   "Suspend windows according to configured rules\n" \
-  "-v   log verbose\n" \
-  "-vv  log events\n" \
-  "-vvv log signals\n"
+  "-f   Run program in foreground\n" \
+  "-v   Log verbose\n" \
+  "-vv  Log events\n" \
+  "-vvv Log signals\n"
 
 Statement *config;
 Statement *parse_config(const char*); /* y.tab.c */
+static char* find_config_file();
 
 static gboolean on_quit(gpointer loop) {
   restore_processes();
@@ -30,12 +34,16 @@ static void attach_signal(GMainLoop *loop, int sig) {
 }
 
 int main(int argc, char *argv[]) {
-  const char *config_file = "./window-suspender.rc";
+  char *config_file = NULL;
+  int foreground = 0;
 
 OPT:
-  switch (getopt(argc, argv, "hvc:")) {
+  switch (getopt(argc, argv, "hvfc:")) {
     case 'c':
       config_file = optarg;
+      goto OPT;
+    case 'f':
+      foreground = 1;
       goto OPT;
     case 'v':
       verbosity++;
@@ -47,18 +55,75 @@ OPT:
     default: return 1;
   }
 
-  gdk_init(&argc, &argv);
-  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
+  if (config_file)
+    config = parse_config(config_file);
+  else if ((config_file = find_config_file())) {
+    config = parse_config(config_file);
+    free(config_file);
+  }
+  else {
+    printerr("No configuration file found. Exiting\n");
+    return 1;
+  }
 
-  if (! (config = parse_config(config_file)))
+  if (! config)
     return 1;
 
   if (DEBUG)
     statement_dump(config, 0, true);
 
+  if (! foreground)
+    switch (fork()) {
+      case -1: perror("fork()");
+               return 1;
+      case 0:  break;
+      default: return 0;
+    }
+
+  gdk_init(&argc, &argv);
+  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
   manager_init();
   attach_signal(loop, SIGINT);
   attach_signal(loop, SIGTERM);
   g_main_loop_run(loop);
   return 0;
 }
+
+#define CONFIG_FILE "window-suspender.rc"
+char* find_config_file() {
+  const int size = 4096;
+	char *file = malloc(size);
+	const char *home;
+
+  snprintf(file, size, "./" CONFIG_FILE);
+  if (! access(file, F_OK))
+    return file;
+
+	home = getenv("XDG_CONFIG_HOME");
+	if (home && *home) {
+		snprintf(file, size, "%s/" CONFIG_FILE, home);
+		if (! access(file, F_OK))
+      return file;
+	}
+
+	home = getenv("HOME");
+	if (!home || !*home) {
+		struct passwd *pwd = getpwuid(getuid());
+		if (pwd)
+			home = pwd->pw_dir;
+	}
+
+	if (home && *home) {
+		snprintf(file, size, "%s/.config/" CONFIG_FILE, home);
+		if (! access(file, F_OK))
+			return file;
+
+		snprintf(file, size, "%s/." CONFIG_FILE, home);
+		if (! access(file, F_OK))
+			return file;
+	}
+
+  free(file);
+  return NULL;
+}
+
