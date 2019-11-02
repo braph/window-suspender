@@ -9,13 +9,6 @@
 
 #define C_NOT(X) conditional_logic_not_new(X)
 
-/* TODO:
-  Solve SHIFT-REDUCE conflicts (wtf?):
-      | condition AND_AND condition  { $$ = conditional_logic_and_new($1, $3); }
-      | condition OR_OR condition    { $$ = conditional_logic_or_new($1, $3); }
-      | NOT condition                { $$ = C_NOT($2); }
-*/
-
 int yylex();
 int yyparse();
 extern FILE *yyin;
@@ -77,7 +70,7 @@ Statement* parse_config(const char *file) {
 %token REGEX_EQUAL REGEX_UNEQUAL CONTAINS
 %token PRINT SYSTEM SUSPEND RETURN
 %token OPTION_SUSPEND_DELAY OPTION_REFRESH_DELAY OPTION_REFRESH_DURATION
-%token COND_TYPE COND_STACKPOSITION COND_STATE
+%token COND_TYPE COND_STACKPOSITION COND_STATE COND_WORKSPACE_NUMBER
 %token NOT AND_AND OR_OR
 
 %type <conditional> condition
@@ -112,6 +105,7 @@ condition
     | COND_TYPE EQUAL WINDOW_TYPE     { $$ = conditional_windowtype_new($3); }
     | COND_STATE EQUAL WINDOW_STATE   { $$ = conditional_windowstate_new($3); }
     | COND_STACKPOSITION numeric_comparison NUMBER { $$ = conditional_stackposition_new($2, $3); }
+    | COND_WORKSPACE_NUMBER numeric_comparison NUMBER { $$ = conditional_workspace_number_new($2, $3); }
     | condition AND_AND condition     { $$ = conditional_logic_and_new($1, $3); }
     | condition OR_OR condition %prec AND_AND { $$ = conditional_logic_or_new($1, $3); }
     | NOT condition  %prec OR_OR      { $$ = C_NOT($2); }

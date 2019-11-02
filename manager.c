@@ -34,14 +34,14 @@ static gboolean refresh_callback(Application*);
 #define G_TIMEOUT_ADD(T, ...) \
   (T >= 1000 ? g_timeout_add_seconds(T/1000, __VA_ARGS__) : g_timeout_add(T, __VA_ARGS__))
 
-Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
+static Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
   for (GSList *l = applications; l; l = l->next)
     if (((Application*) l->data)->wnck_app == wnck_app)
       return l->data;
   return NULL;
 }
 
-void kill_wnck_application(WnckApplication* wnck_app, int sig) {
+static void kill_wnck_application(WnckApplication* wnck_app, int sig) {
   int pid = wnck_application_get_pid(wnck_app);
   if (! pid) {
     log_signal("kill_wnck_application: PID is 0");
@@ -52,7 +52,7 @@ void kill_wnck_application(WnckApplication* wnck_app, int sig) {
   kill(pid, sig);
 }
 
-void application_cancel_timeout(Application* app) {
+static void application_cancel_timeout(Application* app) {
   debug("Removing timeout source %d\n", app->timeout_id);
   g_source_remove(app->timeout_id);
   app->timeout_id = 0;
@@ -156,7 +156,7 @@ static gboolean refresh_callback(Application *app) {
 
 /* Apply the configured rules to an application and its windows */
 static void application_apply_rules(WnckApplication *app) {
-  verbose("application::apply_rules\n");
+  debug("application::apply_rules\n");
   wnck_application_dump(app);
   WnckWindow *win;
   Statement suspend_stmt = {
@@ -199,17 +199,20 @@ static void application_apply_rules(WnckApplication *app) {
 
     if (! have_suspend) {
       // One window didn't match the criteria for suspend, do a resume instead
+      debug("--> Window %s prevented to suspend the application\n", windump(win));
       suspend_stmt.type = STATEMENT_RESUME;
     }
   }
 
+  verbose("--> Executing on %s:\n", windump(win));
+  if (verbosity) statement_dump(&suspend_stmt, 8, 0);
   statement_execute(&suspend_stmt, win);
   free(statements.list);
 }
 
 /* Apply the configuration rules to all applications of the screen */
 static void screen_apply_rules() {
-  verbose("screen::apply_rules()\n");
+  debug("screen::apply_rules()\n");
   for (GSList *l = applications; l; l = l->next)
     application_apply_rules(((Application*) l->data)->wnck_app);
 }
@@ -230,11 +233,12 @@ static void on_win_signal(WnckWindow* window, gpointer signame) {
 static void on_window_state_changed(WnckWindow* window,
     WnckWindowState changed_mask,
     WnckWindowState new_state,
-    gpointer self)
+    gpointer unused)
 {
-  // XXX: If window state changes to `above` we have to apply rules to all apps
+  // Window may have changed its `above` state, this affects our logic of
+  // calculating the stackposition, so we have to apply the configuration to all
+  // applications.
   screen_apply_rules();
-  //on_win_signal(window, "state-changed");
 }
 
 static void window_connect_signals(WnckWindow *win) {
@@ -280,7 +284,7 @@ static void on_application_opened(WnckScreen* screen, WnckApplication* wnck_app,
   Application *app = calloc(1, sizeof(Application));
   app->wnck_app = wnck_app;
   applications = g_slist_append(applications, app);
-  log_event("\nmanager::on_application_opened(): added %d %s\n",
+  log_event("\nscreen::on_application_opened(): added %d %s\n",
       wnck_application_get_pid(wnck_app), wnck_application_get_name(wnck_app));
 }
 
@@ -288,53 +292,52 @@ static void on_application_closed(WnckScreen* screen, WnckApplication* wnck_app,
   Application *app = get_application_for_wnck_application(wnck_app);
   applications = g_slist_remove(applications, app);
   free(app);
-  log_event("\nmanager::on_application_closed(): removed %d %s\n",
+  log_event("\nscreen::on_application_closed(): removed %d %s\n",
       wnck_application_get_pid(wnck_app), wnck_application_get_name(wnck_app));
 }
 
 // === Windows ===
-static void on_window_opened(WnckScreen* screen, WnckWindow* window, gpointer self) {
-  log_event("\nmanager::on_window_opened(): %s\n", windump(window));
+static void on_window_opened(WnckScreen* screen, WnckWindow* window, gpointer unused) {
+  log_event("\nscreen::on_window_opened(): %s\n", windump(window));
   window_connect_signals(window);
-  screen_apply_rules();
 }
 
-#if 0 /* on_window_stacking_changed() will do the work.
-         calling this also results in an error */
-static void on_window_closed(WnckScreen* screen, WnckWindow* window, gpointer self) {
-  log_event("\nmanager::on_window_closed(): %s\n", windump(window));
+#if 0
+static void on_window_closed(WnckScreen* screen, WnckWindow* window, gpointer unused) {
+  log_event("\nscreen::on_window_closed(): %s\n", windump(window));
   window_disconnect_signals(window);
   screen_apply_rules();
 }
 #endif
 
 // === Window Stacking ===
-static void on_window_stacking_changed(WnckScreen* screen, gpointer self) {
-  log_event("\nmanager::on_window_stacking_changed()\n");
+static void on_window_stacking_changed(WnckScreen* screen, gpointer unused) {
+  log_event("\nscreen::on_window_stacking_changed()\n");
   screen_apply_rules();
 }
 
-#if 0 /* on_window_stacking_changed() will do the work */
-static void on_active_window_changed(WnckScreen* screen, WnckWindow* prev, gpointer self) {
-  log_event("\nmanager::on_active_window_changed()\n");
+#if 0
+static void on_active_window_changed(WnckScreen* screen, WnckWindow* prev, gpointer unused) {
+  log_event("\screen::on_active_window_changed()\n");
   screen_apply_rules();
 }
 #endif
 
 // === Workspaces ===
-static void on_active_workspace_changed(WnckScreen* screen, WnckWorkspace* prev, gpointer self) {
-  log_event("\nmanager::on_active_workspace_changed()\n");
+static void on_active_workspace_changed(WnckScreen* screen, WnckWorkspace* prev, gpointer unused) {
+  log_event("\nscreen::on_active_workspace_changed()\n");
   screen_apply_rules();
 }
 
 // === Misc ===
-static void on_showing_desktop_changed(WnckScreen* screen, gpointer self) {
-  log_event("\nmanager::on_showing_desktop_changed()\n");
+static void on_showing_desktop_changed(WnckScreen* screen, gpointer unused) {
+  log_event("\nscreen::on_showing_desktop_changed()\n");
   screen_apply_rules();
 }
 
 void manager_init() {
   screen = wnck_screen_get_default();
+
   // Applications
   g_signal_connect(screen, "application-opened", (GCallback) on_application_opened, NULL);
   g_signal_connect(screen, "application-closed", (GCallback) on_application_closed, NULL);

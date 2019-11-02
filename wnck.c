@@ -55,7 +55,7 @@ const char *window_states_to_str(WnckWindowState state) {
     return tmp;
 
   str[0] = '\0';
-  for (unsigned int i = 0; state && i <= WNCK_WINDOW_STATE_MAX; ++i) {
+  for (unsigned int i = 0; state && i <= WNCK_WINDOW_STATE_HIGHEST_BIT; ++i) {
     if (state & (1 << i)) {
       state |= (1 << i);
       if ((tmp = window_state_to_str(1 << i))) {
@@ -70,6 +70,26 @@ const char *window_states_to_str(WnckWindowState state) {
 }
 
 /* ============================================================================
+ * window_get_state()
+ * ==========================================================================*/
+
+#undef wnck_window_get_state /* enable this funtion */
+
+WnckWindowState window_get_state(WnckWindow *win) {
+  int state = wnck_window_get_state(win);
+  WnckWorkspace
+    *cur_workspace = wnck_screen_get_active_workspace(screen),
+    *win_workspace = wnck_window_get_workspace(win);
+
+  if (cur_workspace && win_workspace && win_workspace != cur_workspace)
+    return state | WNCK_WINDOW_STATE_INACTIVE_WORKSPACE;
+  else
+    return state;
+}
+
+#define wnck_window_get_state(...) USE_WINDOW_GET_STATE_INSTEAD 
+
+/* ============================================================================
  * window_get_stackposition()
  * ==========================================================================*/
 
@@ -79,16 +99,45 @@ const char *window_states_to_str(WnckWindowState state) {
 unsigned int window_get_stackposition(WnckWindow *win) {
   unsigned int size = 0;
   unsigned int index = 0;
+  WnckWorkspace *workspace;
+
+  workspace = wnck_screen_get_active_workspace(screen);
+  if (! workspace)
+    workspace = wnck_window_get_workspace(win);
+
+  // We don't know the workspace. The most sane value is to return a
+  // stackposition of 0.
+  if (! workspace)
+    return 0;
+
+  WnckWorkspace *win_workspace;
   for (GList* l = wnck_screen_get_windows_stacked(screen); l; l = l->next) {
-    if (option_ignore_above && wnck_window_is_above((WnckWindow*) l->data))
-      /* ignore */;
-    else
-      ++size;
+    win_workspace = wnck_window_get_workspace((WnckWindow*) l->data);
+    if (!win_workspace || workspace == win_workspace) {
+      if (option_ignore_above && wnck_window_is_above((WnckWindow*) l->data))
+        /* ignore */;
+      else
+        ++size;
+    }
     if (win == l->data)
       index = size;
   }
 
   return size - index;
+}
+
+/* ============================================================================
+ * window_get_workspace_number() / window_get_workspace_name()
+ * ==========================================================================*/
+
+int window_get_workspace_number(WnckWindow *win) {
+  WnckWorkspace *workspace = wnck_window_get_workspace(win);
+  return (workspace ? wnck_workspace_get_number(workspace) : -1);
+}
+
+const char* window_get_workspace_name(WnckWindow *win) {
+  WnckWorkspace *workspace = wnck_window_get_workspace(win);
+  return (workspace ? wnck_workspace_get_name(workspace) : "<ALL>");
 }
 
 /* ============================================================================
@@ -107,11 +156,12 @@ const char* windump(WnckWindow *win) {
       *klass = wnck_window_get_class_group_name(win),
       *group = wnck_window_get_class_instance_name(win),
       *type  = window_type_to_str(wnck_window_get_window_type(win)),
-      *states = window_states_to_str(wnck_window_get_state(win));
+      *states = window_states_to_str(window_get_state(win)),
+      *workspace = window_get_workspace_name(win);
     int
       pid = wnck_window_get_pid(win),
-      number = 0, // TODO: desktop number
       stack_pos = window_get_stackposition(win),
+      workspace_num = window_get_workspace_number(win),
       title_len = strlen(title);
 
     char *title_truncated = strdup(title);
@@ -122,8 +172,8 @@ const char* windump(WnckWindow *win) {
       strcpy(&title_truncated[MAXLEN/2 + 3], title + (title_len - MAXLEN/2 + 3));
     }
 
-    snprintf(buf, sizeof(buf), "\"%s\" CLASS=%s GROUP=%s [%d]{%d} PID=%d TYPE=%s STATES=%s",
-      title_truncated, klass, group, number, stack_pos, pid, type, states);
+    snprintf(buf, sizeof(buf), "\"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s",
+      title_truncated, klass, group, workspace_num, workspace, stack_pos, pid, type, states);
 
     free(title_truncated);
     return buf;

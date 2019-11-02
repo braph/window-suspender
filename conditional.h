@@ -16,6 +16,7 @@ typedef enum {
   CONDITIONAL_WINDOWTYPE,
   CONDITIONAL_WINDOWSTATE,
   CONDITIONAL_STACKPOSITION,
+  CONDITIONAL_WORKSPACE_NUMBER,
   CONDITIONAL_SYSTEM,
 } conditional_type;
 
@@ -34,6 +35,7 @@ typedef enum {
   WINDOW_GROUP,
   WINDOW_ROLE,
   WINDOW_ICON_NAME,
+  WINDOW_WORKSPACE,
 } WSWindowString;
 
 struct Conditional;
@@ -47,6 +49,11 @@ struct Conditional {
       Conditional *a;
       Conditional *b;
     } logic;
+
+    struct {
+      comparison_type comparison;
+      int number;
+    } numeric;
 
     struct {
       WSWindowString field;
@@ -67,11 +74,6 @@ struct Conditional {
     } windowstate;
 
     struct {
-      comparison_type comparison;
-      unsigned int number;
-    } stackposition;
-
-    struct {
       char string[1];
     } system;
 
@@ -88,7 +90,8 @@ Conditional* conditional_string_contains_new(WSWindowString, const char*);
 Conditional* conditional_regex_match_new(WSWindowString, const char*);
 Conditional* conditional_windowtype_new(WnckWindowType);
 Conditional* conditional_windowstate_new(WnckWindowState);
-Conditional* conditional_stackposition_new(comparison_type, unsigned int);
+Conditional* conditional_stackposition_new(comparison_type, int);
+Conditional* conditional_workspace_number_new(comparison_type, int);
 Conditional* conditional_system_new(const char*);
 
 // Methods
@@ -99,20 +102,22 @@ void conditional_dump(Conditional*);
 void conditional_free(Conditional*);
 
 // Helpers
-#define window_get_string(WIN, FIELD) \
-  (FIELD == WINDOW_TITLE ? wnck_window_get_name(WIN) : \
-  (FIELD == WINDOW_GROUP ? wnck_window_get_class_instance_name(WIN) : \
-  (FIELD == WINDOW_CLASS ? wnck_window_get_class_group_name(WIN) : \
-  (FIELD == WINDOW_ROLE  ? wnck_window_get_role(WIN) : \
+#define window_get_string(WIN, FIELD) (\
+  (FIELD == WINDOW_TITLE ?     wnck_window_get_name(WIN) : \
+  (FIELD == WINDOW_GROUP ?     wnck_window_get_class_instance_name(WIN) : \
+  (FIELD == WINDOW_CLASS ?     wnck_window_get_class_group_name(WIN) : \
+  (FIELD == WINDOW_ROLE  ?     wnck_window_get_role(WIN) : \
   (FIELD == WINDOW_ICON_NAME ? wnck_window_get_icon_name(WIN) : \
-   NULL)))))
+  (FIELD == WINDOW_WORKSPACE ? window_get_workspace_name(WIN) : \
+   NULL)))))))
 
-#define window_field_to_string(FIELD) \
-  (FIELD == WINDOW_TITLE ? "title" : \
-  (FIELD == WINDOW_GROUP ? "groupname" : \
-  (FIELD == WINDOW_CLASS ? "classname" : \
-  (FIELD == WINDOW_ROLE  ? "role" : \
+#define window_field_to_string(FIELD) (\
+  (FIELD == WINDOW_TITLE ?     "title" : \
+  (FIELD == WINDOW_GROUP ?     "groupname" : \
+  (FIELD == WINDOW_CLASS ?     "classname" : \
+  (FIELD == WINDOW_ROLE  ?     "role" : \
   (FIELD == WINDOW_ICON_NAME ? "iconname" : \
-   NULL)))))
+  (FIELD == WINDOW_WORKSPACE ? "workspace" : \
+   NULL)))))))
 
 #endif

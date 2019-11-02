@@ -30,10 +30,13 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
     case CONDITIONAL_WINDOWTYPE:
       return wnck_window_get_window_type(win) == this.klass.windowtype.type;
     case CONDITIONAL_WINDOWSTATE:
-      return wnck_window_get_state(win) & this.klass.windowstate.state;
+      return window_get_state(win) & this.klass.windowstate.state;
     case CONDITIONAL_STACKPOSITION:
-      cmp = window_get_stackposition(win) - this.klass.stackposition.number;
-      switch (this.klass.stackposition.comparison) {
+    case CONDITIONAL_WORKSPACE_NUMBER:
+      cmp = (this.type == CONDITIONAL_STACKPOSITION ?
+          window_get_stackposition(win) : window_get_workspace_number(win));
+      cmp -= this.klass.numeric.number;
+      switch (this.klass.numeric.comparison) {
         case COMPARE_EQUAL:         return cmp == 0;
         case COMPARE_UNEQUAL:       return cmp != 0;
         case COMPARE_LESS:          return cmp <  0;
@@ -118,10 +121,17 @@ Conditional* conditional_windowstate_new(WnckWindowState state) {
   return self;
 }
 
-Conditional* conditional_stackposition_new(comparison_type comparison, unsigned int number) {
+Conditional* conditional_stackposition_new(comparison_type comparison, int number) {
   CREATE_SELF(CONDITIONAL_STACKPOSITION);
-  this.klass.stackposition.number = number;
-  this.klass.stackposition.comparison = comparison;
+  this.klass.numeric.number = number;
+  this.klass.numeric.comparison = comparison;
+  return self;
+}
+
+Conditional* conditional_workspace_number_new(comparison_type comparison, int number) {
+  CREATE_SELF(CONDITIONAL_WORKSPACE_NUMBER);
+  this.klass.numeric.number = number;
+  this.klass.numeric.comparison = comparison;
   return self;
 }
 
@@ -131,7 +141,6 @@ Conditional* conditional_system_new(const char *string) {
   return self;
 }
 
-#if DEBUG
 void conditional_dump(Conditional* self) {
 #define o(...) printf(__VA_ARGS__);
   switch (this.type) {
@@ -164,18 +173,20 @@ void conditional_dump(Conditional* self) {
     o("state == %s", window_state_to_str(this.klass.windowstate.state));
     break;
   case CONDITIONAL_STACKPOSITION:
-    o("stackposition %s %d", (char[6][3]) {
+  case CONDITIONAL_WORKSPACE_NUMBER:
+    o("%s %s %d",
+        (this.type == CONDITIONAL_STACKPOSITION ? "stackposition" : "workspace_number"),
+        (char[6][3]) {
         [COMPARE_EQUAL]         = "==",
         [COMPARE_UNEQUAL]       = "!=",
         [COMPARE_LESS]          = "<\0",
         [COMPARE_LESS_EQUAL]    = "<=",
         [COMPARE_GREATER]       = ">\0",
-        [COMPARE_GREATER_EQUAL] = ">="    }[this.klass.stackposition.comparison], 
-        this.klass.stackposition.number);
+        [COMPARE_GREATER_EQUAL] = ">="    }[this.klass.numeric.comparison], 
+        this.klass.numeric.number);
     break;
   case CONDITIONAL_SYSTEM:
     o("system \"%s\"", this.klass.system.string);
     break;
   }
 }
-#endif

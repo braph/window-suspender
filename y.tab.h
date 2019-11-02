@@ -74,9 +74,10 @@ extern int yydebug;
     COND_TYPE = 280,
     COND_STACKPOSITION = 281,
     COND_STATE = 282,
-    NOT = 283,
-    AND_AND = 284,
-    OR_OR = 285
+    COND_WORKSPACE_NUMBER = 283,
+    NOT = 284,
+    AND_AND = 285,
+    OR_OR = 286
   };
 #endif
 /* Tokens.  */
@@ -105,15 +106,16 @@ extern int yydebug;
 #define COND_TYPE 280
 #define COND_STACKPOSITION 281
 #define COND_STATE 282
-#define NOT 283
-#define AND_AND 284
-#define OR_OR 285
+#define COND_WORKSPACE_NUMBER 283
+#define NOT 284
+#define AND_AND 285
+#define OR_OR 286
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 58 "config.y"
+#line 51 "config.y"
 
   int number;
   char *string;
@@ -125,7 +127,7 @@ union YYSTYPE
   struct Statement *statement;
   struct Conditional *conditional;
 
-#line 129 "y.tab.h"
+#line 131 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

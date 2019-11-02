@@ -37,6 +37,8 @@ groupname              yylval.field=WINDOW_GROUP     ; return WINDOW_FIELD;
 classname              yylval.field=WINDOW_CLASS     ; return WINDOW_FIELD;
 iconname               yylval.field=WINDOW_ICON_NAME ; return WINDOW_FIELD;
 role                   yylval.field=WINDOW_ROLE      ; return WINDOW_FIELD;
+workspace              yylval.field=WINDOW_WORKSPACE ; return WINDOW_FIELD;
+workspace_number       return COND_WORKSPACE_NUMBER;
 type                   return COND_TYPE;
 stackposition          return COND_STACKPOSITION;
 state                  return COND_STATE;

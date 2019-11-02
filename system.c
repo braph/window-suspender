@@ -6,7 +6,7 @@
 int system_with_winenv(const char *string, WnckWindow *win) {
   const char *str;
   char buf[512] = "WINDOW_IS_";
-  int states = wnck_window_get_state(win);
+  int states = window_get_state(win);
 
 #define export(NAME, VALUE) \
   setenv(NAME, VALUE, 1)
@@ -14,7 +14,7 @@ int system_with_winenv(const char *string, WnckWindow *win) {
 #define export_safe(NAME, VALUE) \
   str = VALUE; export(NAME, (str ? str : ""))
 
-  for (unsigned int i = 0; i <= WNCK_WINDOW_STATE_MAX; ++i) {
+  for (unsigned int i = 0; i <= WNCK_WINDOW_STATE_HIGHEST_BIT; ++i) {
     if ((str = window_state_to_str(1 << i))) {
       strcpy(buf + sizeof("WINDOW_IS_")-1, str);
       for (char *c = buf + sizeof("WINDOW_IS_")-1; *c; *c = toupper(*c), ++c);
@@ -27,12 +27,15 @@ int system_with_winenv(const char *string, WnckWindow *win) {
   export_safe("WINDOW_GROUP",     wnck_window_get_class_instance_name(win));
   export_safe("WINDOW_ICON_NAME", wnck_window_get_icon_name(win));
   export_safe("WINDOW_ROLE",      wnck_window_get_role(win));
+  export_safe("WINDOW_WORKSPACE", window_get_workspace_name(win));
   export_safe("WINDOW_TYPE",      window_type_to_str(wnck_window_get_window_type(win)));
   export_safe("WINDOW_STATE",     window_states_to_str(states));
   sprintf(buf, "%d", wnck_window_get_pid(win));
   export("WINDOW_PID", buf);
   sprintf(buf, "%d", window_get_stackposition(win));
   export("WINDOW_STACKPOSITION", buf);
+  sprintf(buf, "%d", window_get_workspace_number(win));
+  export("WINDOW_WORKSPACE_NUMBER", buf);
 
   int child, retval;
   switch ((child = fork())) {

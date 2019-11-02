@@ -64,10 +64,12 @@
 #        groupname
 #        classname
 #        iconname
+#        workspace
 #
 #
-#    Matching against the stack position of the window:
-#      (stackposition <OPERATOR> <NUMBER>)
+#    Matching against numeric expressions:
+#      (stackposition <OPERATOR> <NUMBER>),
+#      (workspace_number <OPERATOR> <NUMBER>)
 #
 #      Available operators:
 #        ==  !=  <=  >=  <  >
@@ -100,6 +102,8 @@
 #       $WINDOW_STATE - Comma separated list of states
 #       $WINDOW_PID
 #       $WINDOW_STACKPOSITION
+#       $WINDOW_WORKSPACE
+#       $WINDOW_WORKSPACE_NUMBER
 #    These window state variables are set to "0" or "1":
 #       $WINDOW_IS_MINIMIZED
 #       $WINDOW_IS_MAXIMIZED_HORIZONTALLY
@@ -134,19 +138,19 @@
   return;
 }
 
-(state == minimized) {
-  suspend;
+# Never suspend a browser that's playing Youtube
+(classname == 'bnox' && title contains "YouTube") {
   return;
 }
 
-# Never suspend a Browser that's playing Youtube
-(classname == 'bnox' && title contains "YouTube") {
+# Minimized windows and windows on inactive workspaces do not need any refresh
+(state == minimized || state == inactive_workspace) {
+  suspend;
   return;
 }
 
 # Suspend windows that are not directly in the foreground
 (stackposition >= 1) {
-  system 'echo Suspending PID=$WINDOW_PID $WINDOW_TITLE {$WINDOW_STACKPOSITION}';
   suspend --suspend-delay 0 --refresh-delay 1000 --refresh-duration 1;
   return;
 }

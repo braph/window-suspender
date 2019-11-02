@@ -119,7 +119,6 @@ Statement* statement_noop_new() {
   return self;
 }
 
-#if DEBUG
 void statement_dump(Statement *self, int indent, bool with_trailing) {
   #define outf(FMT, ...) \
     printf("%*s" FMT, indent, "", ##__VA_ARGS__) 
@@ -142,6 +141,9 @@ void statement_dump(Statement *self, int indent, bool with_trailing) {
         this.klass.suspend.refresh_delay,
         this.klass.suspend.refresh_duration);
     break;
+  case STATEMENT_RESUME:
+    outf("resume (INTERNAL);\n");
+    break;
   case STATEMENT_PRINT:
     outf("print \"%s\";\n", this.klass.print.string);
     break;
@@ -149,10 +151,9 @@ void statement_dump(Statement *self, int indent, bool with_trailing) {
     outf("system \"%s\";\n", this.klass.system.string);
     break;
   case STATEMENT_NOOP:
-    outf("NOOP;\n");
+    outf(";\n");
     break;
   }
   if (with_trailing && this.next)
     statement_dump(this.next, indent, with_trailing);
 }
-#endif
