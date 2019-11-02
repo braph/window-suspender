@@ -124,7 +124,8 @@ void restore_processes() {
       continue;
     if (app->timeout_id)
       application_cancel_timeout(app);
-    wnck_application_dump(app->wnck_app);
+    if (verbosity)
+      wnck_application_dump(app->wnck_app);
     kill_wnck_application(app->wnck_app, SIGCONT);
   }
 }
@@ -157,7 +158,8 @@ static gboolean refresh_callback(Application *app) {
 /* Apply the configured rules to an application and its windows */
 static void application_apply_rules(WnckApplication *app) {
   debug("application::apply_rules\n");
-  wnck_application_dump(app);
+  if (verbosity)
+    wnck_application_dump(app);
   WnckWindow *win;
   Statement suspend_stmt = {
     .type = STATEMENT_SUSPEND,
