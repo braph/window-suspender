@@ -3,6 +3,7 @@
 #include "statement.h"
 #include "common.h"
 #include "wnck.h"
+#include "kill.h"
 
 extern Statement *config;
 static GSList *applications;
@@ -50,6 +51,7 @@ static void kill_wnck_application(WnckApplication* wnck_app, int sig) {
   log_signal("Sending %s to %d \"%s\"\n", (sig == SIGCONT ? "SIGCONT" : "SIGSTOP"),
       pid, wnck_application_get_name(wnck_app));
   kill(pid, sig);
+  kill_children(pid, sig);
 }
 
 static void application_cancel_timeout(Application* app) {
@@ -201,7 +203,7 @@ static void application_apply_rules(WnckApplication *app) {
 
     if (! have_suspend) {
       // One window didn't match the criteria for suspend, do a resume instead
-      debug("--> Window %s prevented to suspend the application\n", windump(win));
+      verbose("--> Window %s prevented to suspend the application\n", windump(win));
       suspend_stmt.type = STATEMENT_RESUME;
     }
   }

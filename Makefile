@@ -3,7 +3,7 @@ DEBUG ?= 0
 PKG_CONFIG := $(shell pkg-config --libs --cflags libwnck-3.0 glib-2.0)
 CC_FLAGS = -DDEBUG=$(DEBUG) -Wall -Wpedantic
 
-OBJS = manager wnck common conditional statement system
+OBJS = manager wnck common conditional statement system kill
 SOURCE_FILES := $(addsuffix .c, $(OBJS))
 OBJS += lex.yy y.tab
 OBJS := $(addsuffix .o, $(OBJS))
