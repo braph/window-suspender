@@ -128,6 +128,15 @@
 #  GOOD LUCK!
 # =============================================================================
 
+# The bnox browser has a `chrome-sandbox` subprocess.
+# The `chrome-sandbox` process has `bnox` subprocesses again.
+process 'bnox' has children 'chrome-sandbox';
+process 'chrome-sandbox' has children 'bnox';
+# $ pstree -p (simplified)
+#   bnox(1008)-+
+#               `-chrome-sandbox(1011)-+
+#                                       `-bnox(1892)
+
 # Never suspend media players
 (classname == 'mpv') {
   return;
@@ -151,7 +160,7 @@
 
 # Suspend windows that are not directly in the foreground
 (stackposition >= 1) {
-  suspend --suspend-delay 1000 --refresh-delay 1000 --refresh-duration 1;
+  suspend --suspend-delay 1000 --refresh-delay 5000 --refresh-duration 1;
   return;
 }
 

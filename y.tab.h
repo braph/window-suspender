@@ -68,16 +68,19 @@ extern int yydebug;
     SYSTEM = 274,
     SUSPEND = 275,
     RETURN = 276,
-    OPTION_SUSPEND_DELAY = 277,
-    OPTION_REFRESH_DELAY = 278,
-    OPTION_REFRESH_DURATION = 279,
-    COND_TYPE = 280,
-    COND_STACKPOSITION = 281,
-    COND_STATE = 282,
-    COND_WORKSPACE_NUMBER = 283,
-    NOT = 284,
-    AND_AND = 285,
-    OR_OR = 286
+    PROCESS = 277,
+    HAS = 278,
+    CHILDREN = 279,
+    OPTION_SUSPEND_DELAY = 280,
+    OPTION_REFRESH_DELAY = 281,
+    OPTION_REFRESH_DURATION = 282,
+    COND_TYPE = 283,
+    COND_STACKPOSITION = 284,
+    COND_STATE = 285,
+    COND_WORKSPACE_NUMBER = 286,
+    NOT = 287,
+    AND_AND = 288,
+    OR_OR = 289
   };
 #endif
 /* Tokens.  */
@@ -100,22 +103,25 @@ extern int yydebug;
 #define SYSTEM 274
 #define SUSPEND 275
 #define RETURN 276
-#define OPTION_SUSPEND_DELAY 277
-#define OPTION_REFRESH_DELAY 278
-#define OPTION_REFRESH_DURATION 279
-#define COND_TYPE 280
-#define COND_STACKPOSITION 281
-#define COND_STATE 282
-#define COND_WORKSPACE_NUMBER 283
-#define NOT 284
-#define AND_AND 285
-#define OR_OR 286
+#define PROCESS 277
+#define HAS 278
+#define CHILDREN 279
+#define OPTION_SUSPEND_DELAY 280
+#define OPTION_REFRESH_DELAY 281
+#define OPTION_REFRESH_DURATION 282
+#define COND_TYPE 283
+#define COND_STACKPOSITION 284
+#define COND_STATE 285
+#define COND_WORKSPACE_NUMBER 286
+#define NOT 287
+#define AND_AND 288
+#define OR_OR 289
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 51 "config.y"
+#line 52 "config.y"
 
   int number;
   char *string;
@@ -126,8 +132,10 @@ union YYSTYPE
   comparison_type comparison;
   struct Statement *statement;
   struct Conditional *conditional;
+  struct ProcessRule *process_rule;
+  GSList *string_list;
 
-#line 131 "y.tab.h"
+#line 139 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

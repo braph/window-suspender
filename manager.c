@@ -32,8 +32,10 @@ typedef struct {
 static gboolean suspend_callback(Application*);
 static gboolean refresh_callback(Application*);
 
-#define G_TIMEOUT_ADD(T, ...) \
-  (T >= 1000 ? g_timeout_add_seconds(T/1000, __VA_ARGS__) : g_timeout_add(T, __VA_ARGS__))
+#define G_TIMEOUT_ADD(T, CALLBACK, DATA) (\
+  (T >= 1000 ? g_timeout_add_seconds(T/1000, (GSourceFunc) CALLBACK, DATA) : \
+  (T >= 1    ? g_timeout_add(T, (GSourceFunc) CALLBACK, DATA) : \
+  CALLBACK(DATA), 0)))
 
 static Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
   for (GSList *l = applications; l; l = l->next)
@@ -87,15 +89,8 @@ void window_suspend(WnckWindow *win, int suspend_delay, int refresh_delay, int r
   app->suspend_delay = suspend_delay;
   app->refresh_delay = refresh_delay;
   app->refresh_duration = refresh_duration;
-
-  if (suspend_delay) {
-    app->state = STATE_IS_SUSPENDING;
-    app->timeout_id = G_TIMEOUT_ADD(suspend_delay, (GSourceFunc) suspend_callback, app);
-  }
-  else {
-    app->timeout_id = 0;
-    suspend_callback(app);
-  }
+  app->state = STATE_IS_SUSPENDING;
+  app->timeout_id = G_TIMEOUT_ADD(suspend_delay, suspend_callback, app);
 }
 
 /* Resume a process (only if it has previously been stopped by us) and cancel
@@ -138,16 +133,14 @@ static gboolean suspend_callback(Application *app) {
   kill_wnck_application(app->wnck_app, SIGSTOP);
   app->state = STATE_SUSPENDED;
   if (app->refresh_delay)
-    app->timeout_id = G_TIMEOUT_ADD(app->refresh_delay, (GSourceFunc) refresh_callback, app);
-  else
-    app->timeout_id = 0;
+    app->timeout_id = G_TIMEOUT_ADD(app->refresh_delay, refresh_callback, app);
   return false;
 }
 
 static gboolean refresh_callback(Application *app) {
   debug("refresh_callback: %d\n", app->timeout_id);
   kill_wnck_application(app->wnck_app, SIGCONT);
-  app->timeout_id = G_TIMEOUT_ADD(app->refresh_duration, (GSourceFunc) suspend_callback, app);
+  app->timeout_id = G_TIMEOUT_ADD(app->refresh_duration, suspend_callback, app);
   return false;
 }
 
@@ -288,7 +281,7 @@ static void window_disconnect_signals(WnckWindow *win) {
 static void on_application_opened(WnckScreen* screen, WnckApplication* wnck_app, gpointer unused) {
   Application *app = calloc(1, sizeof(Application));
   app->wnck_app = wnck_app;
-  applications = g_slist_append(applications, app);
+  applications = g_slist_prepend(applications, app);
   log_event("screen::on_application_opened(): added %d %s\n",
       wnck_application_get_pid(wnck_app), wnck_application_get_name(wnck_app));
 }

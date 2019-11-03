@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include "kill.h"
 #include "wnck.h"
 #include "common.h"
 #include "statement.h"
@@ -18,7 +19,7 @@ static int parsing_error;
 
 void yyerror(const char *str)
 {
-  printerr("Error: %s (line :%d)\n", str, yylineno);
+  printerr("Error: %s (line: %d)\n", str, yylineno);
   parsing_error = 1;
 }
 
@@ -58,6 +59,8 @@ Statement* parse_config(const char *file) {
   comparison_type comparison;
   struct Statement *statement;
   struct Conditional *conditional;
+  struct ProcessRule *process_rule;
+  GSList *string_list;
 }
 
 %token <string> STRING
@@ -68,7 +71,7 @@ Statement* parse_config(const char *file) {
 %token <logic>  LOGIC_OPERATOR
 %token <comparison> EQUAL UNEQUAL LESS LESS_EQUAL GREATER GREATER_EQUAL
 %token REGEX_EQUAL REGEX_UNEQUAL CONTAINS
-%token PRINT SYSTEM SUSPEND RETURN
+%token PRINT SYSTEM SUSPEND RETURN PROCESS HAS CHILDREN
 %token OPTION_SUSPEND_DELAY OPTION_REFRESH_DELAY OPTION_REFRESH_DURATION
 %token COND_TYPE COND_STACKPOSITION COND_STATE COND_WORKSPACE_NUMBER
 %token NOT AND_AND OR_OR
@@ -77,6 +80,7 @@ Statement* parse_config(const char *file) {
 %type <statement> config statement statement_list
 %type <statement> compound_statement command_statement if_statement suspend_statement
 %type <comparison> numeric_comparison
+%type <string_list> string_list
 
 %start config
 
@@ -87,8 +91,23 @@ Statement* parse_config(const char *file) {
 %%
 
 config
-    : /*empty*/      { config = statement_return_new(); /*empty*/ }
+    : /*empty*/      { config = statement_return_new(); }
     | statement_list { config = $1; }
+    | process_children_list statement_list { config = $2; }
+    ;
+
+process_children_list
+    : process_children
+    | process_children process_children_list
+    ;
+
+process_children
+    : PROCESS STRING HAS CHILDREN string_list ';' { process_rule_add(strdup($2), $5); free($2); }
+    ;
+
+string_list
+    : STRING                  { $$ = g_slist_append(NULL, $1); }
+    | string_list ',' STRING  { $$ = g_slist_append($1, $3);   }
     ;
 
 numeric_comparison
