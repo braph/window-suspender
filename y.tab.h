@@ -54,33 +54,32 @@ extern int yydebug;
     WINDOW_STATE = 260,
     WINDOW_TYPE = 261,
     WINDOW_FIELD = 262,
-    LOGIC_OPERATOR = 263,
-    EQUAL = 264,
-    UNEQUAL = 265,
-    LESS = 266,
-    LESS_EQUAL = 267,
-    GREATER = 268,
-    GREATER_EQUAL = 269,
-    REGEX_EQUAL = 270,
-    REGEX_UNEQUAL = 271,
-    CONTAINS = 272,
-    PRINT = 273,
-    SYSTEM = 274,
-    SUSPEND = 275,
-    RETURN = 276,
-    PROCESS = 277,
-    HAS = 278,
-    CHILDREN = 279,
-    OPTION_SUSPEND_DELAY = 280,
-    OPTION_REFRESH_DELAY = 281,
-    OPTION_REFRESH_DURATION = 282,
-    COND_TYPE = 283,
-    COND_STACKPOSITION = 284,
-    COND_STATE = 285,
-    COND_WORKSPACE_NUMBER = 286,
-    NOT = 287,
-    AND_AND = 288,
-    OR_OR = 289
+    EQUAL = 263,
+    UNEQUAL = 264,
+    LESS = 265,
+    LESS_EQUAL = 266,
+    GREATER = 267,
+    GREATER_EQUAL = 268,
+    REGEX_EQUAL = 269,
+    REGEX_UNEQUAL = 270,
+    CONTAINS = 271,
+    PRINT = 272,
+    SYSTEM = 273,
+    SUSPEND = 274,
+    RETURN = 275,
+    PROCESS = 276,
+    HAS = 277,
+    CHILDREN = 278,
+    OPTION_SUSPEND_DELAY = 279,
+    OPTION_REFRESH_DELAY = 280,
+    OPTION_REFRESH_DURATION = 281,
+    COND_TYPE = 282,
+    COND_STACKPOSITION = 283,
+    COND_STATE = 284,
+    COND_WORKSPACE_NUMBER = 285,
+    NOT = 286,
+    AND_AND = 287,
+    OR_OR = 288
   };
 #endif
 /* Tokens.  */
@@ -89,53 +88,50 @@ extern int yydebug;
 #define WINDOW_STATE 260
 #define WINDOW_TYPE 261
 #define WINDOW_FIELD 262
-#define LOGIC_OPERATOR 263
-#define EQUAL 264
-#define UNEQUAL 265
-#define LESS 266
-#define LESS_EQUAL 267
-#define GREATER 268
-#define GREATER_EQUAL 269
-#define REGEX_EQUAL 270
-#define REGEX_UNEQUAL 271
-#define CONTAINS 272
-#define PRINT 273
-#define SYSTEM 274
-#define SUSPEND 275
-#define RETURN 276
-#define PROCESS 277
-#define HAS 278
-#define CHILDREN 279
-#define OPTION_SUSPEND_DELAY 280
-#define OPTION_REFRESH_DELAY 281
-#define OPTION_REFRESH_DURATION 282
-#define COND_TYPE 283
-#define COND_STACKPOSITION 284
-#define COND_STATE 285
-#define COND_WORKSPACE_NUMBER 286
-#define NOT 287
-#define AND_AND 288
-#define OR_OR 289
+#define EQUAL 263
+#define UNEQUAL 264
+#define LESS 265
+#define LESS_EQUAL 266
+#define GREATER 267
+#define GREATER_EQUAL 268
+#define REGEX_EQUAL 269
+#define REGEX_UNEQUAL 270
+#define CONTAINS 271
+#define PRINT 272
+#define SYSTEM 273
+#define SUSPEND 274
+#define RETURN 275
+#define PROCESS 276
+#define HAS 277
+#define CHILDREN 278
+#define OPTION_SUSPEND_DELAY 279
+#define OPTION_REFRESH_DELAY 280
+#define OPTION_REFRESH_DURATION 281
+#define COND_TYPE 282
+#define COND_STACKPOSITION 283
+#define COND_STATE 284
+#define COND_WORKSPACE_NUMBER 285
+#define NOT 286
+#define AND_AND 287
+#define OR_OR 288
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 52 "config.y"
+#line 47 "config.y"
 
   int number;
   char *string;
   WnckWindowType type;
   WnckWindowState state;
   WSWindowString field;
-  conditional_type logic;
   comparison_type comparison;
   struct Statement *statement;
   struct Conditional *conditional;
-  struct ProcessRule *process_rule;
   GSList *string_list;
 
-#line 139 "y.tab.h"
+#line 135 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

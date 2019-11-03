@@ -16,26 +16,31 @@
 
 static time_t last_update;
 
-struct proc { int pid, ppid; char *name; } *processes;
-unsigned int processes_size;
-unsigned int processes_allocated;
+static struct proc { int pid, ppid; char *name; } *processes;
+static unsigned int processes_size;
+static unsigned int processes_allocated;
 
 /* TODO: This is a bit messy for now, clean this up. */
-GSList *process_rules;
+typedef struct {
+  char *name;
+  GSList *subprocesses;
+} ProcessRule;
 
-void process_rule_add(const char *name, GSList *children) {
+static GSList *process_rules;
+
+void process_rule_add(const char *name, GSList *subprocesses) {
   ProcessRule *rule;
   for (GSList *l = process_rules; l; l = l->next) {
     rule = l->data;
     if (!strcmp(rule->name, name)) {
-      rule->children = g_slist_concat(rule->children, children);
+      rule->subprocesses = g_slist_concat(rule->subprocesses, subprocesses);
       return;
     }
   }
 
   rule = malloc(sizeof(ProcessRule));
   rule->name = strdup(name);
-  rule->children = children;
+  rule->subprocesses = subprocesses;
   process_rules = g_slist_prepend(process_rules, rule);
 }
 
@@ -44,33 +49,23 @@ void process_rule_add(const char *name, GSList *children) {
  *  PID     NAME   S PPID  ...
  */
 static int get_ppid_and_name(const char *pid, char **name) {
-  char buf[128];
+  int fd, n, ppid;
+  char buf[256], *name_begin, *name_end, *ppid_begin;
   sprintf(buf, PROC_FS "/%s/stat", pid);
-  int fd = open(buf, O_RDONLY);
-  if (fd < 0)
+  if ((fd = open(buf, O_RDONLY)) < 0)
     return 0;
-  int n = read(fd, buf, sizeof(buf) - 1);
+  n = read(fd, buf, sizeof(buf) - 1);
   close(fd);
   if (n <= 0)
     return 0;
   buf[n] = '\0';
-  char *name_begin = strchr(buf, '(');
-  if (!name_begin)
-    return 0;
-  name_begin++;
-  char *name_end = strrchr(name_begin, ')');
-  if (!name_end)
-    return 0;
-  char *ppid_begin = strpbrk(name_end, "0123456789");
-  if (ppid_begin) {
-    int ppid = atoi(ppid_begin);
-    if (!ppid)
-      return 0;
-    *name_end = '\0';
-    *name = strdup(name_begin);
-    return ppid;
-  }
-  return 0;
+  if (! (name_begin = strchr(buf, '(')))                return 0;
+  if (! (name_end   = strrchr(name_begin, ')')))        return 0;
+  if (! (ppid_begin = strpbrk(name_end, "0123456789"))) return 0;
+  if (! (ppid       = atoi(ppid_begin)))                return 0;
+  *name_end = '\0';
+  *name = strdup(name_begin + 1);
+  return ppid;
 }
 
 static void read_processes()
@@ -95,6 +90,7 @@ static void read_processes()
         processes = realloc(processes, processes_allocated * sizeof(*processes));
       }
       processes[processes_size++] = process;
+      //printf("Added %5d PPID=%5d %s\n", process.pid, process.ppid, process.name);
     }
     closedir(dir);
   }
@@ -117,15 +113,21 @@ void kill_children(int pid, int sig)
     else if (processes[i].pid == pid)
       parent = &processes[i];
 
-  if (parent) {
+  if (parent && children) {
+    GSList *allowed_subprocesses = NULL;
+    for (GSList *p = process_rules; p; p = p->next)
+      if (!strcmp(parent->name, ((ProcessRule*) p->data)->name)) {
+        allowed_subprocesses = ((ProcessRule*) p->data)->subprocesses;
+        break;
+      }
+
     for (; children; children = children->next) {
       struct proc *child = children->data;
       if (!strcmp(child->name, parent->name))
         goto KILL;
-      for (GSList *p = process_rules; p; p = p->next)
-        for (GSList *c = ((ProcessRule*)p->data)->children; c; c = c->next)
-          if (!strcmp(child->name, c->data))
-            goto KILL;
+      for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
+        if (!strcmp(child->name, subprocess->data))
+          goto KILL;
       continue;
 KILL: kill(child->pid, sig);
       kill_children(child->pid, sig);

@@ -341,6 +341,9 @@ void yyfree ( void *  );
 #define YY_AT_BOL() (YY_CURRENT_BUFFER_LVALUE->yy_at_bol)
 
 /* Begin user sect3 */
+
+#define yywrap() (/*CONSTCOND*/1)
+#define YY_SKIP_YYWRAP
 typedef flex_uint8_t YY_CHAR;
 
 FILE *yyin = NULL, *yyout = NULL;
@@ -381,11 +384,11 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[354] =
     {   0,
-        0,    0,   60,   58,   57,   57,   42,   58,   58,   58,
-       58,   58,   54,   49,   58,   47,   58,   58,   58,   58,
+        0,    0,   60,   58,   57,   57,   51,   58,   58,   58,
+       58,   58,   54,   46,   58,   44,   58,   58,   58,   58,
        58,   58,   58,   58,   58,   58,   58,   58,   58,   58,
-       58,   58,   58,   57,   44,   46,    0,   55,    0,   56,
-       52,    0,    0,   54,   50,   43,   45,   48,    0,    0,
+       58,   58,   58,   57,   43,   49,    0,   55,    0,   56,
+       52,    0,    0,   54,   47,   42,   48,   45,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -407,7 +410,7 @@ static const flex_int16_t yy_accept[354] =
         0,   13,    0,   33,    0,    0,    0,    0,    0,    0,
         0,    0,    0,   14,    0,    0,    0,    0,    0,    0,
        36,    0,    0,    0,    0,   35,   20,   21,    0,    0,
-        0,   37,    0,   51,    0,    0,    0,   25,    0,    0,
+        0,   37,    0,   50,    0,    0,    0,   25,    0,    0,
         0,    0,    0,    0,    0,    0,    0,    0,   24,    0,
         0,   23,    0,    0,    1,    0,    0,    0,    0,   27,
         0,    0,    0,    8,    0,    0,    5,    0,    0,    0,
@@ -677,8 +680,8 @@ char *yytext;
 #include "wnck.h"
 #include "conditional.h"
 #include "y.tab.h"
-#line 680 "lex.yy.c"
-#line 681 "lex.yy.c"
+#line 683 "lex.yy.c"
+#line 684 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -895,9 +898,9 @@ YY_DECL
 		}
 
 	{
-#line 11 "config.l"
+#line 12 "config.l"
 
-#line 900 "lex.yy.c"
+#line 903 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -966,307 +969,303 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 12 "config.l"
-yylval.state=WNCK_WINDOW_STATE_MINIMIZED              ;  return WINDOW_STATE;
+#line 13 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_MINIMIZED              , WINDOW_STATE;
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 13 "config.l"
-yylval.state=WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY ;  return WINDOW_STATE;
+#line 14 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY , WINDOW_STATE;
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 14 "config.l"
-yylval.state=WNCK_WINDOW_STATE_MAXIMIZED_VERTICALLY   ;  return WINDOW_STATE;
+#line 15 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_MAXIMIZED_VERTICALLY   , WINDOW_STATE;
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 15 "config.l"
-yylval.state=WNCK_WINDOW_STATE_SHADED                 ;  return WINDOW_STATE;
+#line 16 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_SHADED                 , WINDOW_STATE;
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 16 "config.l"
-yylval.state=WNCK_WINDOW_STATE_SKIP_PAGER             ;  return WINDOW_STATE;
+#line 17 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_SKIP_PAGER             , WINDOW_STATE;
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 17 "config.l"
-yylval.state=WNCK_WINDOW_STATE_SKIP_TASKLIST          ;  return WINDOW_STATE;
+#line 18 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_SKIP_TASKLIST          , WINDOW_STATE;
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 18 "config.l"
-yylval.state=WNCK_WINDOW_STATE_HIDDEN                 ;  return WINDOW_STATE;
+#line 19 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_HIDDEN                 , WINDOW_STATE;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 19 "config.l"
-yylval.state=WNCK_WINDOW_STATE_FULLSCREEN             ;  return WINDOW_STATE;
+#line 20 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_FULLSCREEN             , WINDOW_STATE;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 20 "config.l"
-yylval.state=WNCK_WINDOW_STATE_DEMANDS_ATTENTION      ;  return WINDOW_STATE;
+#line 21 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_DEMANDS_ATTENTION      , WINDOW_STATE;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 21 "config.l"
-yylval.state=WNCK_WINDOW_STATE_ABOVE                  ;  return WINDOW_STATE;
+#line 22 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_ABOVE                  , WINDOW_STATE;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 22 "config.l"
-yylval.state=WNCK_WINDOW_STATE_BELOW                  ;  return WINDOW_STATE;
+#line 23 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_BELOW                  , WINDOW_STATE;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 23 "config.l"
-yylval.state=WNCK_WINDOW_STATE_INACTIVE_WORKSPACE     ;  return WINDOW_STATE;
+#line 24 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_INACTIVE_WORKSPACE     , WINDOW_STATE;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 24 "config.l"
-yylval.state=WNCK_WINDOW_STATE_STICKY                 ;  return WINDOW_STATE;
+#line 25 "config.l"
+return yylval.state=WNCK_WINDOW_STATE_STICKY                 , WINDOW_STATE;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 26 "config.l"
-yylval.type=WNCK_WINDOW_DESKTOP      ; return WINDOW_TYPE;
+#line 27 "config.l"
+return yylval.type=WNCK_WINDOW_DESKTOP      , WINDOW_TYPE;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 27 "config.l"
-yylval.type=WNCK_WINDOW_DIALOG       ; return WINDOW_TYPE;
+#line 28 "config.l"
+return yylval.type=WNCK_WINDOW_DIALOG       , WINDOW_TYPE;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 28 "config.l"
-yylval.type=WNCK_WINDOW_DOCK         ; return WINDOW_TYPE;
+#line 29 "config.l"
+return yylval.type=WNCK_WINDOW_DOCK         , WINDOW_TYPE;
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 29 "config.l"
-yylval.type=WNCK_WINDOW_MENU         ; return WINDOW_TYPE;
+#line 30 "config.l"
+return yylval.type=WNCK_WINDOW_MENU         , WINDOW_TYPE;
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 30 "config.l"
-yylval.type=WNCK_WINDOW_NORMAL       ; return WINDOW_TYPE;
+#line 31 "config.l"
+return yylval.type=WNCK_WINDOW_NORMAL       , WINDOW_TYPE;
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 31 "config.l"
-yylval.type=WNCK_WINDOW_SPLASHSCREEN ; return WINDOW_TYPE;
+#line 32 "config.l"
+return yylval.type=WNCK_WINDOW_SPLASHSCREEN , WINDOW_TYPE;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 32 "config.l"
-yylval.type=WNCK_WINDOW_TOOLBAR      ; return WINDOW_TYPE;
+#line 33 "config.l"
+return yylval.type=WNCK_WINDOW_TOOLBAR      , WINDOW_TYPE;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 33 "config.l"
-yylval.type=WNCK_WINDOW_UTILITY      ; return WINDOW_TYPE;
+#line 34 "config.l"
+return yylval.type=WNCK_WINDOW_UTILITY      , WINDOW_TYPE;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 35 "config.l"
-yylval.field=WINDOW_TITLE     ; return WINDOW_FIELD;
+#line 36 "config.l"
+return yylval.field=WINDOW_TITLE     , WINDOW_FIELD;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 36 "config.l"
-yylval.field=WINDOW_GROUP     ; return WINDOW_FIELD;
+#line 37 "config.l"
+return yylval.field=WINDOW_GROUP     , WINDOW_FIELD;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 37 "config.l"
-yylval.field=WINDOW_CLASS     ; return WINDOW_FIELD;
+#line 38 "config.l"
+return yylval.field=WINDOW_CLASS     , WINDOW_FIELD;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 38 "config.l"
-yylval.field=WINDOW_ICON_NAME ; return WINDOW_FIELD;
+#line 39 "config.l"
+return yylval.field=WINDOW_ICON_NAME , WINDOW_FIELD;
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 39 "config.l"
-yylval.field=WINDOW_ROLE      ; return WINDOW_FIELD;
+#line 40 "config.l"
+return yylval.field=WINDOW_ROLE      , WINDOW_FIELD;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 40 "config.l"
-yylval.field=WINDOW_WORKSPACE ; return WINDOW_FIELD;
+#line 41 "config.l"
+return yylval.field=WINDOW_WORKSPACE , WINDOW_FIELD;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 41 "config.l"
+#line 42 "config.l"
 return COND_WORKSPACE_NUMBER;
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 42 "config.l"
+#line 43 "config.l"
 return COND_TYPE;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 43 "config.l"
+#line 44 "config.l"
 return COND_STACKPOSITION;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 44 "config.l"
+#line 45 "config.l"
 return COND_STATE;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 46 "config.l"
+#line 47 "config.l"
 return PRINT;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 47 "config.l"
+#line 48 "config.l"
 return SYSTEM;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 48 "config.l"
+#line 49 "config.l"
 return RETURN;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 49 "config.l"
+#line 50 "config.l"
 return SUSPEND;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 50 "config.l"
+#line 51 "config.l"
 return PROCESS;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 51 "config.l"
+#line 52 "config.l"
 return CHILDREN;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 52 "config.l"
+#line 53 "config.l"
 return HAS;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 53 "config.l"
+#line 54 "config.l"
 return OPTION_SUSPEND_DELAY;
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 54 "config.l"
+#line 55 "config.l"
 return OPTION_REFRESH_DELAY;
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 55 "config.l"
+#line 56 "config.l"
 return OPTION_REFRESH_DURATION;
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 57 "config.l"
-/* -----------------------------------*/  return NOT;
+#line 58 "config.l"
+return yylval.comparison=COMPARE_EQUAL         , EQUAL;
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 58 "config.l"
-yylval.comparison=COMPARE_EQUAL        ;  return EQUAL;
+#line 59 "config.l"
+return yylval.comparison=COMPARE_UNEQUAL       , UNEQUAL;
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 59 "config.l"
-yylval.comparison=COMPARE_UNEQUAL      ;  return UNEQUAL;
+#line 60 "config.l"
+return yylval.comparison=COMPARE_GREATER       , GREATER;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 60 "config.l"
-/* -----------------------------------*/  return REGEX_EQUAL;
+#line 61 "config.l"
+return yylval.comparison=COMPARE_GREATER_EQUAL , GREATER_EQUAL;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 61 "config.l"
-/* -----------------------------------*/  return REGEX_UNEQUAL;
+#line 62 "config.l"
+return yylval.comparison=COMPARE_LESS          , LESS;
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 62 "config.l"
-yylval.comparison=COMPARE_GREATER      ;  return GREATER;
+#line 63 "config.l"
+return yylval.comparison=COMPARE_LESS_EQUAL    , LESS_EQUAL;
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 63 "config.l"
-yylval.comparison=COMPARE_GREATER_EQUAL;  return GREATER_EQUAL;
+#line 64 "config.l"
+return /* --------------------------------- */   REGEX_EQUAL;
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 64 "config.l"
-yylval.comparison=COMPARE_LESS         ;  return LESS;
+#line 65 "config.l"
+return /* --------------------------------- */   REGEX_UNEQUAL;
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 65 "config.l"
-yylval.comparison=COMPARE_LESS_EQUAL   ;  return LESS_EQUAL;
+#line 66 "config.l"
+return /* --------------------------------- */   CONTAINS;
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 66 "config.l"
-/* -----------------------------------*/  return CONTAINS;
+#line 68 "config.l"
+return NOT;
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 68 "config.l"
-yylval.logic=CONDITIONAL_LOGIC_AND; return AND_AND;
+#line 69 "config.l"
+return AND_AND;
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 69 "config.l"
-yylval.logic=CONDITIONAL_LOGIC_OR ; return OR_OR;
+#line 70 "config.l"
+return OR_OR;
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 71 "config.l"
-yylval.number=atoi(yytext);   return NUMBER;
+#line 72 "config.l"
+return yylval.number=atoi(yytext), NUMBER;
 	YY_BREAK
 case 55:
 /* rule 55 can match eol */
 YY_RULE_SETUP
 #line 73 "config.l"
-{
-                          yylval.string=strdup(yytext+1);
-                          yylval.string[strlen(yylval.string)-1] = '\0';
-                          return STRING;
-                       }
+return yylval.string=strdup(yytext+1), yylval.string[yyleng-2]='\0', STRING;
 	YY_BREAK
 case 56:
 /* rule 56 can match eol */
 YY_RULE_SETUP
-#line 79 "config.l"
+#line 75 "config.l"
 /* ignore comments */;
 	YY_BREAK
 case 57:
 /* rule 57 can match eol */
 YY_RULE_SETUP
-#line 80 "config.l"
+#line 76 "config.l"
 /* ignore whitespace */;
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 82 "config.l"
+#line 78 "config.l"
 return yytext[0];
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 83 "config.l"
+#line 79 "config.l"
 ECHO;
 	YY_BREAK
-#line 1269 "lex.yy.c"
+#line 1268 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2283,6 +2282,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 83 "config.l"
+#line 79 "config.l"
 
 

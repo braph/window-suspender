@@ -18,7 +18,7 @@ const char* window_type_to_str(WnckWindowType type) {
     case WNCK_WINDOW_SPLASHSCREEN:  return "splashscreen";
     case WNCK_WINDOW_TOOLBAR:       return "toolbar";
     case WNCK_WINDOW_UTILITY:       return "utility";
-    default:                        return NULL;
+    default:                        return "UNKNOWN";
   }
 }
 

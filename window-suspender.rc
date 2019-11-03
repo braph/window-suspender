@@ -101,9 +101,11 @@
 #       $WINDOW_ICON_NAME
 #       $WINDOW_STATE - Comma separated list of states
 #       $WINDOW_PID
+#       $WINDOW_XID
 #       $WINDOW_STACKPOSITION
 #       $WINDOW_WORKSPACE
 #       $WINDOW_WORKSPACE_NUMBER
+#       $WINDOW_X / $WINDOW_Y / $WINDOW_WIDTH / $WINDOW_HEIGHT
 #    These window state variables are set to "0" or "1":
 #       $WINDOW_IS_MINIMIZED
 #       $WINDOW_IS_MAXIMIZED_HORIZONTALLY

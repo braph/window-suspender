@@ -23,11 +23,6 @@ void yyerror(const char *str)
   parsing_error = 1;
 }
 
-int yywrap()
-{
-  return 1;
-}
-
 Statement* parse_config(const char *file) {
   config = NULL;
   parsing_error = 0;
@@ -55,11 +50,9 @@ Statement* parse_config(const char *file) {
   WnckWindowType type;
   WnckWindowState state;
   WSWindowString field;
-  conditional_type logic;
   comparison_type comparison;
   struct Statement *statement;
   struct Conditional *conditional;
-  struct ProcessRule *process_rule;
   GSList *string_list;
 }
 
@@ -68,7 +61,6 @@ Statement* parse_config(const char *file) {
 %token <state>  WINDOW_STATE
 %token <type>   WINDOW_TYPE
 %token <field>  WINDOW_FIELD
-%token <logic>  LOGIC_OPERATOR
 %token <comparison> EQUAL UNEQUAL LESS LESS_EQUAL GREATER GREATER_EQUAL
 %token REGEX_EQUAL REGEX_UNEQUAL CONTAINS
 %token PRINT SYSTEM SUSPEND RETURN PROCESS HAS CHILDREN
@@ -159,7 +151,7 @@ suspend_statement
 
 command_statement
     : ';'               { $$ = statement_noop_new(); }
-    | PRINT STRING ';'  { $$ = statement_print_new($2); free($2); }
+    | PRINT STRING ';'  { $$ = statement_print_new($2);  free($2); }
     | SYSTEM STRING ';' { $$ = statement_system_new($2); free($2); }
     | RETURN ';'        { $$ = statement_return_new(); }
     | suspend_statement ';'

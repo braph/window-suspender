@@ -155,7 +155,7 @@ static gboolean refresh_callback(Application *app) {
 static void application_apply_rules(WnckApplication *app) {
   verbose("[ Application \"%s\" %d ]\n",
       wnck_application_get_name(app), wnck_application_get_pid(app));
-  WnckWindow *win;
+  WnckWindow *win = NULL;
   Statement suspend_stmt = {
     .type = STATEMENT_SUSPEND,
     .klass.suspend = { 0 }
