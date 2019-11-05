@@ -69,7 +69,7 @@ static inline int get_ppid_and_name(const char *pid, char **name) {
   return ppid;
 }
 
-static inline void read_processes()
+static void read_processes()
 {
   while (processes_size)
     free(processes[--processes_size].name);
@@ -140,7 +140,10 @@ void kill_children(int pid, int sig)
       }
     }
 
-    while (to_kill_size--)
-      kill(to_kill[to_kill_size], sig), kill_children(to_kill[to_kill_size], sig);
+    while (to_kill_size--) {
+      //printf("Killing %d with %d\n", to_kill[to_kill_size], sig);
+      kill(to_kill[to_kill_size], sig);
+      kill_children(to_kill[to_kill_size], sig);
+    }
   }
 }

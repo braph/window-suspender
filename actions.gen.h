@@ -2,8 +2,8 @@
   This file is used for generating the code for window actions (maximize, shade, ...)
   in statement.h and statement.c.
 
-  It may also be used for generating Lex&Yacc rules:
-    cpp -P -D GENERATE_YACC_RULES "actions.gen.h"
+  It may also be used for generating Lex rules:
+    cpp -P -D GENERATE_LEX_RULES "actions.gen.h"
 
   Usage:
     #define <COMMAND>
@@ -15,15 +15,6 @@
 #if defined ( INCLUDE_STATEMENT_ACTIONS_ENUMS )
 #define X(UPPER, ...) \
   STATEMENT_ ## UPPER,
-
-#elif defined ( INCLUDE_STATEMENT_ACTIONS_CONSTRUCTORS )
-#define X(UPPER, LOWER, ...) \
-  static inline Statement* statement_ ## LOWER ## _new() {\
-    Statement *self = malloc(sizeof(Statement)); \
-    self->type = STATEMENT_ ## UPPER; \
-    self->next = NULL; \
-    return self; \
-  }
 
 #elif defined ( INCLUDE_STATEMENT_ACTIONS_EXECUTE_CODE )
 #define X(UPPER, LOWER, CODE) \
@@ -39,11 +30,7 @@
 
 #elif defined ( GENERATE_LEX_RULES )
 #define X(UPPER, LOWER, ...) \
-  LOWER return UPPER;
-
-#elif defined ( GENERATE_YACC_RULES )
-#define X(UPPER, LOWER, ...) \
-  | UPPER ';' { $$ = statement_ ## LOWER ## _new(); }
+  LOWER return yylval.action_type=STATEMENT_ ## UPPER , ACTION_TYPE;
 
 #else
 #error "Invalid command specified"
@@ -79,8 +66,6 @@ X(ACTIVATE,                activate,                wnck_window_activate(win, 0)
 X(ACTIVATE_TRANSIENT,      activate_transient,      wnck_window_activate_transient(win, 0))
 
 #undef INCLUDE_STATEMENT_ACTIONS_ENUMS
-#undef INCLUDE_STATEMENT_ACTIONS_CONSTRUCTORS
 #undef INCLUDE_STATEMENT_ACTIONS_EXECUTE_CODE
 #undef INCLUDE_STATEMENT_ACTIONS_DUMP_CODE
 #undef GENERATE_LEX_RULES
-#undef GENERATE_YACC_RULES

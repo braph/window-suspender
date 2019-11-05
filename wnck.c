@@ -164,11 +164,11 @@ const char* windump(WnckWindow *win) {
       title_len = strlen(title);
 
     if (title_len > 50 + 3 /*...*/)
-      snprintf(buf, sizeof(buf), "\"%.25s...%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s",
+      snprintf(buf, sizeof(buf), "[ \"%.25s...%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s ]",
         title, title + (title_len - 25),
         klass, group, workspace_num, workspace, stack_pos, pid, type, states);
     else
-      snprintf(buf, sizeof(buf), "\"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s",
+      snprintf(buf, sizeof(buf), "[ \"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s ]",
         title,
         klass, group, workspace_num, workspace, stack_pos, pid, type, states);
 

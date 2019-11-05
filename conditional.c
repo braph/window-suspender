@@ -6,6 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 
+hook_type window_hook;
+
 #define this (*self)
 
 bool conditional_check(Conditional *self, WnckWindow *win) {
@@ -31,6 +33,8 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
       return wnck_window_get_window_type(win) == this.klass.windowtype.type;
     case CONDITIONAL_WINDOWSTATE:
       return window_get_state(win) & this.klass.windowstate.state;
+    case CONDITIONAL_HOOK:
+      return window_hook == this.klass.hook.hook;
     case CONDITIONAL_STACKPOSITION:
     case CONDITIONAL_WORKSPACE_NUMBER:
       cmp = (this.type == CONDITIONAL_STACKPOSITION ?
@@ -124,6 +128,12 @@ Conditional* conditional_windowstate_new(WnckWindowState state) {
   return self;
 }
 
+Conditional* conditional_hook_new(hook_type hook) {
+  CREATE_SELF(CONDITIONAL_HOOK);
+  this.klass.hook.hook = hook;
+  return self;
+}
+
 Conditional* conditional_stackposition_new(comparison_type comparison, int number) {
   CREATE_SELF(CONDITIONAL_STACKPOSITION);
   this.klass.numeric.number = number;
@@ -174,6 +184,9 @@ void conditional_dump(Conditional* self) {
     break;
   case CONDITIONAL_WINDOWSTATE:
     o("state == %s", window_state_to_str(this.klass.windowstate.state));
+    break;
+  case CONDITIONAL_HOOK:
+    o("hook == %s", hook_to_str(this.klass.hook.hook));
     break;
   case CONDITIONAL_STACKPOSITION:
   case CONDITIONAL_WORKSPACE_NUMBER:

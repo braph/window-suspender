@@ -13,7 +13,7 @@ typedef enum {
   STATEMENT_RETURN,
   STATEMENT_SUSPEND,
   STATEMENT_RESUME, // INTERNAL
-  STATEMENT_NOOP,
+  STATEMENT_NOOP,   // INTERNAL
 #define INCLUDE_STATEMENT_ACTIONS_ENUMS
 #include "actions.gen.h"
 } statement_type;
@@ -55,8 +55,7 @@ Statement* statement_print_new(const char*);
 Statement* statement_system_new(const char*);
 Statement* statement_suspend_new(unsigned int, unsigned int, unsigned int);
 Statement* statement_noop_new();
-#define INCLUDE_STATEMENT_ACTIONS_CONSTRUCTORS
-#include "actions.gen.h"
+Statement* statement_action_new(statement_type);
 
 // Methods
 bool statement_get_matched(Statement*, WnckWindow*, PointerArray*);

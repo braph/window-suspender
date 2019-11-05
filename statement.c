@@ -117,6 +117,11 @@ Statement* statement_noop_new() {
   return self;
 }
 
+Statement* statement_action_new(statement_type action_type) {
+  CREATE_SELF(action_type);
+  return self;
+}
+
 void statement_dump(Statement *self, int indent, bool with_trailing) {
   #define outf(FMT, ...) \
     printerr("%*s" FMT, indent, "", ##__VA_ARGS__)

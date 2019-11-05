@@ -32,10 +32,9 @@ typedef struct {
 static gboolean suspend_callback(Application*);
 static gboolean refresh_callback(Application*);
 
-#define G_TIMEOUT_ADD(T, CALLBACK, DATA) (\
-  (T >= 1000 ? g_timeout_add_seconds(T/1000, (GSourceFunc) CALLBACK, DATA) : \
-  (T >= 1    ? g_timeout_add(T, (GSourceFunc) CALLBACK, DATA) : \
-  CALLBACK(DATA), 0)))
+#define G_TIMEOUT_ADD(T, CALLBACK, DATA) \
+  (T >= 1000 ? g_timeout_add_seconds(T/1000, (GSourceFunc) CALLBACK, DATA) \
+             : g_timeout_add(T, (GSourceFunc) CALLBACK, DATA))
 
 static Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
   for (GSList *l = applications; l; l = l->next)
@@ -151,6 +150,36 @@ static gboolean refresh_callback(Application *app) {
  * conditions and executing the resulting statements.
  * ==========================================================================*/
 
+/* Apply the configured rules to a window.
+ *
+ * Executes all statements except the suspend statements. These will be stored
+ * in the `suspend_statements` argument if it is not NULL.
+ *
+ * Returns TRUE if a suspend statement has been found, FALSE otherwise. */
+static bool window_apply_rules(WnckWindow *win, PointerArray *suspend_statements) {
+  bool have_suspend = false;
+  static PointerArray statements = { 0 };
+  statements.size = 0;
+
+  if (suspend_statements)
+    verbose(" `- "); // Tree-style if called from application_apply_rules()
+  verbose("%s\n", windump(win));
+  statement_get_matched(config, win, &statements);
+
+  for (unsigned int i = 0; i < statements.size; ++i) {
+    Statement *statement = (Statement*) statements.data[i];
+    if (statement->type == STATEMENT_SUSPEND) {
+      have_suspend = true;
+      if (suspend_statements)
+        pointer_array_add(suspend_statements, statement);
+    }
+    else
+      statement_execute(statement, win);
+  }
+
+  return have_suspend;
+}
+
 /* Apply the configured rules to an application and its windows */
 static void application_apply_rules(WnckApplication *app) {
   verbose("[ Application \"%s\" %d ]\n",
@@ -160,47 +189,38 @@ static void application_apply_rules(WnckApplication *app) {
     .type = STATEMENT_SUSPEND,
     .klass.suspend = { 0 }
   };
-  static PointerArray statements = { 0 };
-  statements.size = 0;
+  static PointerArray suspend_statements = { 0 };
+  suspend_statements.size = 0;
 
   for (GList *l = wnck_application_get_windows(app); l; l = l->next) {
     win = l->data;
-    verbose(" `- %s\n", windump(win));
-    statements.size = 0;
-    statement_get_matched(config, win, &statements);
-    bool have_suspend = false;
-
-    // Execute all statements except the suspend statement.
-    for (unsigned int j = 0; j < statements.size; ++j) {
-      Statement *statement = (Statement*) statements.data[j];
-      if (statement->type == STATEMENT_SUSPEND) {
-        have_suspend = true;
-        // Choose highest suspend_delay
-        suspend_stmt.klass.suspend.suspend_delay = MAX(
-            suspend_stmt.klass.suspend.suspend_delay,
-            statement->klass.suspend.suspend_delay);
-        // Choose lowest refresh_delay (but ignore 0)
-        if (! suspend_stmt.klass.suspend.refresh_delay)
-          suspend_stmt.klass.suspend.refresh_delay = statement->klass.suspend.refresh_delay;
-        else if (statement->klass.suspend.refresh_delay) {
-          suspend_stmt.klass.suspend.refresh_delay = MIN(
-              suspend_stmt.klass.suspend.refresh_delay,
-              statement->klass.suspend.refresh_delay);
-        }
-        // Choost highest refresh_duration
-        suspend_stmt.klass.suspend.refresh_duration = MAX(
-            suspend_stmt.klass.suspend.refresh_duration,
-            statement->klass.suspend.refresh_duration);
-      }
-      else {
-        statement_execute(statement, win);
-      }
-    }
-
-    if (! have_suspend) {
+    if (! window_apply_rules(win, &suspend_statements)) {
       // One window didn't match the criteria for suspend, do a resume instead
       verbose("    --> No suspend for: %s\n", windump(win));
       suspend_stmt.type = STATEMENT_RESUME;
+    }
+  }
+
+  if (suspend_stmt.type == STATEMENT_SUSPEND) {
+    // Execute all statements except the suspend statement.
+    for (unsigned int i = 0; i < suspend_statements.size; ++i) {
+      Statement *statement = (Statement*) suspend_statements.data[i];
+      // Choose highest suspend_delay
+      suspend_stmt.klass.suspend.suspend_delay = MAX(
+          suspend_stmt.klass.suspend.suspend_delay,
+          statement->klass.suspend.suspend_delay);
+      // Choose lowest refresh_delay (but ignore 0)
+      if (! suspend_stmt.klass.suspend.refresh_delay)
+        suspend_stmt.klass.suspend.refresh_delay = statement->klass.suspend.refresh_delay;
+      else if (statement->klass.suspend.refresh_delay) {
+        suspend_stmt.klass.suspend.refresh_delay = MIN(
+            suspend_stmt.klass.suspend.refresh_delay,
+            statement->klass.suspend.refresh_delay);
+      }
+      // Choost highest refresh_duration
+      suspend_stmt.klass.suspend.refresh_duration = MAX(
+          suspend_stmt.klass.suspend.refresh_duration,
+          statement->klass.suspend.refresh_duration);
     }
   }
 
@@ -222,11 +242,10 @@ static void screen_apply_rules() {
  * Code for connecting window events.
  * ==========================================================================*/
 
-static void on_win_signal(WnckWindow* window, gpointer signame) {
-  log_event("window::%s(): %s\n", (char*) signame, windump(window));
-  WnckApplication *wnck_app = wnck_window_get_application(window);
-  if (wnck_app)
-    application_apply_rules(wnck_app);
+static void on_win_signal(WnckWindow* window, gpointer hook) {
+  window_hook = GPOINTER_TO_UINT(hook);
+  log_event("window::%s(): %s\n", hook_to_str(window_hook), windump(window));
+  window_apply_rules(window, NULL);
 }
 
 static void on_window_state_changed(WnckWindow* window,
@@ -234,19 +253,24 @@ static void on_window_state_changed(WnckWindow* window,
     WnckWindowState new_state,
     gpointer unused)
 {
-  // Window may have changed its `above` state, this affects our logic of
-  // calculating the stackposition, so we have to apply the configuration to all
-  // applications.
-  screen_apply_rules();
+  window_hook = HOOK_STATE_CHANGED;
+  window_apply_rules(window, NULL);
+  /* If the window changed its `above` state we have to re-apply the configuration
+   * to all windows on the screen, since the `above` state affects our logic
+   * of calculating the stackposition. */
+  if (changed_mask & WNCK_WINDOW_STATE_ABOVE) {
+    window_hook = HOOK_WINDOW_STACKING_CHANGED;
+    screen_apply_rules();
+  }
 }
 
 static inline void window_connect_signals(WnckWindow *win) {
-  g_signal_connect(win, "class-changed",     (GCallback) on_win_signal, "class-changed");
-  g_signal_connect(win, "name-changed",      (GCallback) on_win_signal, "name-changed");
-  g_signal_connect(win, "role-changed",      (GCallback) on_win_signal, "role-changed");
-  g_signal_connect(win, "type-changed",      (GCallback) on_win_signal, "type-changed");
-  g_signal_connect(win, "icon-changed",      (GCallback) on_win_signal, "icon-changed");
-  g_signal_connect(win, "workspace-changed", (GCallback) on_win_signal, "workspace-changed");
+  g_signal_connect(win, "class-changed",     (GCallback) on_win_signal, GUINT_TO_POINTER(HOOK_CLASS_CHANGED));
+  g_signal_connect(win, "name-changed",      (GCallback) on_win_signal, GUINT_TO_POINTER(HOOK_NAME_CHANGED));
+  g_signal_connect(win, "role-changed",      (GCallback) on_win_signal, GUINT_TO_POINTER(HOOK_ROLE_CHANGED));
+  g_signal_connect(win, "type-changed",      (GCallback) on_win_signal, GUINT_TO_POINTER(HOOK_TYPE_CHANGED));
+  g_signal_connect(win, "icon-changed",      (GCallback) on_win_signal, GUINT_TO_POINTER(HOOK_ICON_CHANGED));
+  g_signal_connect(win, "workspace-changed", (GCallback) on_win_signal, GUINT_TO_POINTER(HOOK_WORKSPACE_CHANGED));
   g_signal_connect(win, "state-changed",     (GCallback) on_window_state_changed, NULL);
   //g_signal_connect(win, "actions_changed", ...)
   //g_signal_connect(win, "geometry_changed", ...)
@@ -280,31 +304,36 @@ static void on_application_closed(WnckScreen* screen, WnckApplication* wnck_app,
 static void on_window_opened(WnckScreen* screen, WnckWindow* window, gpointer unused) {
   log_event("screen::on_window_opened(): %s\n", windump(window));
   window_connect_signals(window);
+  window_hook = HOOK_OPENED;
+  window_apply_rules(window, NULL);
+  /* on_window_stacking_changed() will call screen_apply_rules() */
 }
 
-#if 0
 static void on_window_closed(WnckScreen* screen, WnckWindow* window, gpointer unused) {
   log_event("screen::on_window_closed(): %s\n", windump(window));
-  window_disconnect_signals(window);
-  screen_apply_rules();
+  window_hook = HOOK_CLOSED;
+  window_apply_rules(window, NULL);
+  /* on_window_stacking_changed() will call screen_apply_rules() */
 }
-#endif
 
 // === Window Stacking ===
 static void on_window_stacking_changed(WnckScreen* screen, gpointer unused) {
   log_event("screen::on_window_stacking_changed()\n");
+  window_hook = HOOK_WINDOW_STACKING_CHANGED;
   screen_apply_rules();
 }
 
 // === Workspaces ===
 static void on_active_workspace_changed(WnckScreen* screen, WnckWorkspace* prev, gpointer unused) {
   log_event("screen::on_active_workspace_changed()\n");
+  window_hook = HOOK_ACTIVE_WORKSPACE_CHANGED;
   screen_apply_rules();
 }
 
 // === Misc ===
 static void on_showing_desktop_changed(WnckScreen* screen, gpointer unused) {
   log_event("screen::on_showing_desktop_changed()\n");
+  window_hook = HOOK_SHOWING_DESKTOP_CHANGED;
   screen_apply_rules();
 }
 
@@ -318,7 +347,7 @@ int manager_init() {
 
   // Windows
   g_signal_connect(screen, "window-opened", (GCallback) on_window_opened, NULL);
-  //g_signal_connect(screen, "window-closed", (GCallback) on_window_closed, NULL);
+  g_signal_connect(screen, "window-closed", (GCallback) on_window_closed, NULL);
   g_signal_connect(screen, "window-stacking-changed", (GCallback) on_window_stacking_changed, NULL);
   g_signal_connect(screen, "active-window-changed", (GCallback) on_window_stacking_changed, NULL);
 

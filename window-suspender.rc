@@ -154,6 +154,17 @@ process 'chrome-sandbox' has children 'bnox';
   return;
 }
 
+# When a game is opened, stop all downloads and continue them when it is closed.
+(classname == 'openarena.x86_64') {
+  (hook == opened) {
+    system 'sudo killall --verbose -STOP wget';
+  }
+
+  (hook == closed) {
+    system 'sudo killall --verbose -CONT wget';
+  }
+}
+
 # Minimized windows and windows on inactive workspaces do not need any refresh
 (state == minimized || state == inactive_workspace) {
   suspend;

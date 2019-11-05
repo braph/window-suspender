@@ -54,59 +54,35 @@ extern int yydebug;
     WINDOW_STATE = 260,
     WINDOW_TYPE = 261,
     WINDOW_FIELD = 262,
-    EQUAL = 263,
-    UNEQUAL = 264,
-    LESS = 265,
-    LESS_EQUAL = 266,
-    GREATER = 267,
-    GREATER_EQUAL = 268,
-    REGEX_EQUAL = 269,
-    REGEX_UNEQUAL = 270,
-    CONTAINS = 271,
-    PRINT = 272,
-    SYSTEM = 273,
-    SUSPEND = 274,
-    RETURN = 275,
-    PROCESS = 276,
-    HAS = 277,
-    CHILDREN = 278,
-    OPTION_SUSPEND_DELAY = 279,
-    OPTION_REFRESH_DELAY = 280,
-    OPTION_REFRESH_DURATION = 281,
-    COND_TYPE = 282,
-    COND_STACKPOSITION = 283,
-    COND_STATE = 284,
-    COND_WORKSPACE_NUMBER = 285,
-    NOT = 286,
-    AND_AND = 287,
-    OR_OR = 288,
-    CLOSE = 289,
-    MINIMIZE = 290,
-    UNMINIMIZE = 291,
-    MAXIMIZE = 292,
-    UNMAXIMIZE = 293,
-    MAXIMIZE_HORIZONTALLY = 294,
-    UNMAXIMIZE_HORIZONTALLY = 295,
-    MAXIMIZE_VERTICALLY = 296,
-    UNMAXIMIZE_VERTICALLY = 297,
-    SHADE = 298,
-    UNSHADE = 299,
-    MAKE_ABOVE = 300,
-    UNMAKE_ABOVE = 301,
-    MAKE_BELOW = 302,
-    UNMAKE_BELOW = 303,
-    STICK = 304,
-    UNSTICK = 305,
-    SET_SKIP_PAGER = 306,
-    UNSET_SKIP_PAGER = 307,
-    SET_SKIP_TASKLIST = 308,
-    UNSET_SKIP_TASKLIST = 309,
-    SET_FULLSCREEN = 310,
-    UNSET_FULLSCREEN = 311,
-    PIN = 312,
-    UNPIN = 313,
-    ACTIVATE = 314,
-    ACTIVATE_TRANSIENT = 315
+    HOOK_TYPE = 263,
+    ACTION_TYPE = 264,
+    EQUAL = 265,
+    UNEQUAL = 266,
+    LESS = 267,
+    LESS_EQUAL = 268,
+    GREATER = 269,
+    GREATER_EQUAL = 270,
+    REGEX_EQUAL = 271,
+    REGEX_UNEQUAL = 272,
+    CONTAINS = 273,
+    PRINT = 274,
+    SYSTEM = 275,
+    SUSPEND = 276,
+    RETURN = 277,
+    PROCESS = 278,
+    HAS = 279,
+    CHILDREN = 280,
+    OPTION_SUSPEND_DELAY = 281,
+    OPTION_REFRESH_DELAY = 282,
+    OPTION_REFRESH_DURATION = 283,
+    COND_TYPE = 284,
+    COND_STACKPOSITION = 285,
+    COND_STATE = 286,
+    COND_HOOK = 287,
+    COND_WORKSPACE_NUMBER = 288,
+    NOT = 289,
+    AND_AND = 290,
+    OR_OR = 291
   };
 #endif
 /* Tokens.  */
@@ -115,59 +91,35 @@ extern int yydebug;
 #define WINDOW_STATE 260
 #define WINDOW_TYPE 261
 #define WINDOW_FIELD 262
-#define EQUAL 263
-#define UNEQUAL 264
-#define LESS 265
-#define LESS_EQUAL 266
-#define GREATER 267
-#define GREATER_EQUAL 268
-#define REGEX_EQUAL 269
-#define REGEX_UNEQUAL 270
-#define CONTAINS 271
-#define PRINT 272
-#define SYSTEM 273
-#define SUSPEND 274
-#define RETURN 275
-#define PROCESS 276
-#define HAS 277
-#define CHILDREN 278
-#define OPTION_SUSPEND_DELAY 279
-#define OPTION_REFRESH_DELAY 280
-#define OPTION_REFRESH_DURATION 281
-#define COND_TYPE 282
-#define COND_STACKPOSITION 283
-#define COND_STATE 284
-#define COND_WORKSPACE_NUMBER 285
-#define NOT 286
-#define AND_AND 287
-#define OR_OR 288
-#define CLOSE 289
-#define MINIMIZE 290
-#define UNMINIMIZE 291
-#define MAXIMIZE 292
-#define UNMAXIMIZE 293
-#define MAXIMIZE_HORIZONTALLY 294
-#define UNMAXIMIZE_HORIZONTALLY 295
-#define MAXIMIZE_VERTICALLY 296
-#define UNMAXIMIZE_VERTICALLY 297
-#define SHADE 298
-#define UNSHADE 299
-#define MAKE_ABOVE 300
-#define UNMAKE_ABOVE 301
-#define MAKE_BELOW 302
-#define UNMAKE_BELOW 303
-#define STICK 304
-#define UNSTICK 305
-#define SET_SKIP_PAGER 306
-#define UNSET_SKIP_PAGER 307
-#define SET_SKIP_TASKLIST 308
-#define UNSET_SKIP_TASKLIST 309
-#define SET_FULLSCREEN 310
-#define UNSET_FULLSCREEN 311
-#define PIN 312
-#define UNPIN 313
-#define ACTIVATE 314
-#define ACTIVATE_TRANSIENT 315
+#define HOOK_TYPE 263
+#define ACTION_TYPE 264
+#define EQUAL 265
+#define UNEQUAL 266
+#define LESS 267
+#define LESS_EQUAL 268
+#define GREATER 269
+#define GREATER_EQUAL 270
+#define REGEX_EQUAL 271
+#define REGEX_UNEQUAL 272
+#define CONTAINS 273
+#define PRINT 274
+#define SYSTEM 275
+#define SUSPEND 276
+#define RETURN 277
+#define PROCESS 278
+#define HAS 279
+#define CHILDREN 280
+#define OPTION_SUSPEND_DELAY 281
+#define OPTION_REFRESH_DELAY 282
+#define OPTION_REFRESH_DURATION 283
+#define COND_TYPE 284
+#define COND_STACKPOSITION 285
+#define COND_STATE 286
+#define COND_HOOK 287
+#define COND_WORKSPACE_NUMBER 288
+#define NOT 289
+#define AND_AND 290
+#define OR_OR 291
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -180,12 +132,14 @@ union YYSTYPE
   WnckWindowType type;
   WnckWindowState state;
   WSWindowString field;
+  statement_type action_type;
+  hook_type hook;
   comparison_type comparison;
   struct Statement *statement;
   struct Conditional *conditional;
   GSList *string_list;
 
-#line 189 "y.tab.h"
+#line 143 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

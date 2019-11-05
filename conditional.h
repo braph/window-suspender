@@ -15,6 +15,7 @@ typedef enum {
   CONDITIONAL_REGEX_MATCH,
   CONDITIONAL_WINDOWTYPE,
   CONDITIONAL_WINDOWSTATE,
+  CONDITIONAL_HOOK,
   CONDITIONAL_STACKPOSITION,
   CONDITIONAL_WORKSPACE_NUMBER,
   CONDITIONAL_SYSTEM,
@@ -37,6 +38,24 @@ typedef enum {
   WINDOW_ICON_NAME,
   WINDOW_WORKSPACE,
 } WSWindowString;
+
+typedef enum {
+  HOOK_OPENED,
+  HOOK_CLOSED,
+  HOOK_CLASS_CHANGED,
+  HOOK_NAME_CHANGED,
+  HOOK_ROLE_CHANGED,
+  HOOK_TYPE_CHANGED,
+  HOOK_ICON_CHANGED,
+  HOOK_WORKSPACE_CHANGED,
+  HOOK_STATE_CHANGED,
+  HOOK_WINDOW_STACKING_CHANGED,
+  HOOK_ACTIVE_WORKSPACE_CHANGED,
+  HOOK_SHOWING_DESKTOP_CHANGED,
+} hook_type;
+
+// Storing this here for now.
+extern hook_type window_hook;
 
 struct Conditional;
 typedef struct Conditional Conditional;
@@ -74,6 +93,10 @@ struct Conditional {
     } windowstate;
 
     struct {
+      hook_type hook;
+    } hook;
+
+    struct {
       char string[1];
     } system;
 
@@ -90,6 +113,7 @@ Conditional* conditional_string_contains_new(WSWindowString, const char*);
 Conditional* conditional_regex_match_new(WSWindowString, const char*);
 Conditional* conditional_windowtype_new(WnckWindowType);
 Conditional* conditional_windowstate_new(WnckWindowState);
+Conditional* conditional_hook_new(hook_type);
 Conditional* conditional_stackposition_new(comparison_type, int);
 Conditional* conditional_workspace_number_new(comparison_type, int);
 Conditional* conditional_system_new(const char*);
@@ -119,5 +143,20 @@ void conditional_free(Conditional*);
   (FIELD == WINDOW_ICON_NAME ? "iconname" : \
   (FIELD == WINDOW_WORKSPACE ? "workspace" : \
    NULL)))))))
+
+#define hook_to_str(HOOK) (\
+  (HOOK == HOOK_OPENED ?          "opened" : \
+  (HOOK == HOOK_CLOSED ?          "closed" : \
+  (HOOK == HOOK_CLASS_CHANGED ?   "class_changed" : \
+  (HOOK == HOOK_NAME_CHANGED ?    "name_changed" : \
+  (HOOK == HOOK_ROLE_CHANGED ?    "role_changed" : \
+  (HOOK == HOOK_TYPE_CHANGED ?    "type_changed" : \
+  (HOOK == HOOK_ICON_CHANGED ?    "icon_changed" : \
+  (HOOK == HOOK_WORKSPACE_CHANGED ? "workspace_changed" : \
+  (HOOK == HOOK_STATE_CHANGED ?   "state_changed" : \
+  (HOOK == HOOK_WINDOW_STACKING_CHANGED ?  "window_stacking_changed" : \
+  (HOOK == HOOK_ACTIVE_WORKSPACE_CHANGED ? "active_workspace_changed" : \
+  (HOOK == HOOK_SHOWING_DESKTOP_CHANGED  ? "showing_desktop_changed" : \
+   NULL)))))))))))))
 
 #endif
