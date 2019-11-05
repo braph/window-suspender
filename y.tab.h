@@ -79,7 +79,34 @@ extern int yydebug;
     COND_WORKSPACE_NUMBER = 285,
     NOT = 286,
     AND_AND = 287,
-    OR_OR = 288
+    OR_OR = 288,
+    CLOSE = 289,
+    MINIMIZE = 290,
+    UNMINIMIZE = 291,
+    MAXIMIZE = 292,
+    UNMAXIMIZE = 293,
+    MAXIMIZE_HORIZONTALLY = 294,
+    UNMAXIMIZE_HORIZONTALLY = 295,
+    MAXIMIZE_VERTICALLY = 296,
+    UNMAXIMIZE_VERTICALLY = 297,
+    SHADE = 298,
+    UNSHADE = 299,
+    MAKE_ABOVE = 300,
+    UNMAKE_ABOVE = 301,
+    MAKE_BELOW = 302,
+    UNMAKE_BELOW = 303,
+    STICK = 304,
+    UNSTICK = 305,
+    SET_SKIP_PAGER = 306,
+    UNSET_SKIP_PAGER = 307,
+    SET_SKIP_TASKLIST = 308,
+    UNSET_SKIP_TASKLIST = 309,
+    SET_FULLSCREEN = 310,
+    UNSET_FULLSCREEN = 311,
+    PIN = 312,
+    UNPIN = 313,
+    ACTIVATE = 314,
+    ACTIVATE_TRANSIENT = 315
   };
 #endif
 /* Tokens.  */
@@ -114,6 +141,33 @@ extern int yydebug;
 #define NOT 286
 #define AND_AND 287
 #define OR_OR 288
+#define CLOSE 289
+#define MINIMIZE 290
+#define UNMINIMIZE 291
+#define MAXIMIZE 292
+#define UNMAXIMIZE 293
+#define MAXIMIZE_HORIZONTALLY 294
+#define UNMAXIMIZE_HORIZONTALLY 295
+#define MAXIMIZE_VERTICALLY 296
+#define UNMAXIMIZE_VERTICALLY 297
+#define SHADE 298
+#define UNSHADE 299
+#define MAKE_ABOVE 300
+#define UNMAKE_ABOVE 301
+#define MAKE_BELOW 302
+#define UNMAKE_BELOW 303
+#define STICK 304
+#define UNSTICK 305
+#define SET_SKIP_PAGER 306
+#define UNSET_SKIP_PAGER 307
+#define SET_SKIP_TASKLIST 308
+#define UNSET_SKIP_TASKLIST 309
+#define SET_FULLSCREEN 310
+#define UNSET_FULLSCREEN 311
+#define PIN 312
+#define UNPIN 313
+#define ACTIVATE 314
+#define ACTIVATE_TRANSIENT 315
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -131,7 +185,7 @@ union YYSTYPE
   struct Conditional *conditional;
   GSList *string_list;
 
-#line 135 "y.tab.h"
+#line 189 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

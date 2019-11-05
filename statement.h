@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "wnck.h"
+#include "common.h"
 #include "conditional.h"
 
 typedef enum {
@@ -13,13 +14,12 @@ typedef enum {
   STATEMENT_SUSPEND,
   STATEMENT_RESUME, // INTERNAL
   STATEMENT_NOOP,
+#define INCLUDE_STATEMENT_ACTIONS_ENUMS
+#include "actions.gen.h"
 } statement_type;
 
 struct Statement;
 typedef struct Statement Statement;
-
-struct StatementList;
-typedef struct StatementList StatementList;
 
 struct Statement {
   statement_type type;
@@ -55,22 +55,15 @@ Statement* statement_print_new(const char*);
 Statement* statement_system_new(const char*);
 Statement* statement_suspend_new(unsigned int, unsigned int, unsigned int);
 Statement* statement_noop_new();
+#define INCLUDE_STATEMENT_ACTIONS_CONSTRUCTORS
+#include "actions.gen.h"
 
 // Methods
-bool statement_get_matched(Statement*, WnckWindow*, StatementList*);
+bool statement_get_matched(Statement*, WnckWindow*, PointerArray*);
 void statement_execute(Statement*, WnckWindow*);
 void statement_dump(Statement*, int, bool);
 
 // Destructor
 void statement_free(Statement*);
-
-// ============================================================================
-
-// Structure for storing matches
-struct StatementList {
-  unsigned int size;
-  unsigned int allocated;
-  Statement **list;
-};
 
 #endif

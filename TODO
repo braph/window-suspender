@@ -1,3 +1,9 @@
 - Error handling (e.g. invalid regexes)
 - Hints for syntax errors
 - Warning message for colliding suspend-commands
+- Only subscribe events we're really interested in.
+  Determine this while parsing the configuration. (maybe)
+- Add a hook conditinal (`if window is closed`, `if window is opened`)
+- Destroy the app
+- Add DBus?
+- Recycling of signal sources?

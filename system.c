@@ -1,12 +1,30 @@
 #include "system.h"
 #include <sys/wait.h>
 #include <stdlib.h>
-#include <ctype.h>
 
-int system_with_winenv(const char *string, WnckWindow *win) {
+#define WINDOW_IS_(STATE) \
+  [GET_BIT_POSITION_OF_FLAG(WNCK_WINDOW_STATE_ ## STATE)-1] = "WINDOW_IS_" #STATE
+
+static const char* const WINDOW_IS[WNCK_WINDOW_STATE_HIGHEST_BIT] = {
+  WINDOW_IS_(MINIMIZED),
+  WINDOW_IS_(MAXIMIZED_HORIZONTALLY),
+  WINDOW_IS_(MAXIMIZED_VERTICALLY),
+  WINDOW_IS_(SHADED),
+  WINDOW_IS_(SKIP_PAGER),
+  WINDOW_IS_(SKIP_TASKLIST),
+  WINDOW_IS_(STICKY),
+  WINDOW_IS_(HIDDEN),
+  WINDOW_IS_(FULLSCREEN),
+  WINDOW_IS_(DEMANDS_ATTENTION),
+  WINDOW_IS_(URGENT),
+  WINDOW_IS_(ABOVE),
+  WINDOW_IS_(BELOW),
+  WINDOW_IS_(INACTIVE_WORKSPACE)
+};
+
+static void export_window_variables(WnckWindow *win) {
   const char *str;
-  char buf[512] = "WINDOW_IS_";
-  unsigned int states = window_get_state(win);
+  char buf[32];
 
 #define export(NAME, VALUE) \
   setenv(NAME, VALUE, 1)
@@ -20,13 +38,10 @@ int system_with_winenv(const char *string, WnckWindow *win) {
 #define export_long(NAME, VALUE) \
   sprintf(buf, "%lu", VALUE); export(NAME, buf)
 
-  for (unsigned int i = 0; i <= WNCK_WINDOW_STATE_HIGHEST_BIT; ++i) {
-    if ((str = window_state_to_str(1 << i))) {
-      unsigned int j = sizeof("WINDOW_IS_")-2;
-      do { buf[++j] = toupper(*str); } while (*(str++));
-      export(buf, (states & (1 << i) ? "1" : "0"));
-    }
-  }
+  unsigned int states = window_get_state(win);
+  for (unsigned int i = 0; i < WNCK_WINDOW_STATE_HIGHEST_BIT; ++i)
+    if (WINDOW_IS[i])
+      export(WINDOW_IS[i], (states & (1 << i) ? "1" : "0"));
 
   int x, y, width, height;
   wnck_window_get_geometry(win, &x, &y, &width, &height);
@@ -46,7 +61,10 @@ int system_with_winenv(const char *string, WnckWindow *win) {
   export("WINDOW_TYPE", window_type_to_str(wnck_window_get_window_type(win)));
   export("WINDOW_STATE", window_states_to_str(states));
   export("WINDOW_WORKSPACE", window_get_workspace_name(win));
+}
 
+int system_with_winenv(const char *string, WnckWindow *win) {
+  export_window_variables(win);
   int child, retval;
   switch ((child = fork())) {
     case -1:

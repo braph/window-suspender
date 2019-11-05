@@ -62,7 +62,7 @@ struct Conditional {
 
     struct {
       WSWindowString field;
-      regex_t regex;
+      regex_t *regex;
     } regex_match;
 
     struct {
@@ -83,8 +83,8 @@ struct Conditional {
 // Constructors
 Conditional* conditional_logic_new(conditional_type, Conditional*, Conditional*);
 #define      conditional_logic_not_new(C)   conditional_logic_new(CONDITIONAL_LOGIC_NOT, C, NULL)
-#define      conditional_logic_and_new(A,B) conditional_logic_new(CONDITIONAL_LOGIC_AND, A, B)
 #define      conditional_logic_or_new(A,B)  conditional_logic_new(CONDITIONAL_LOGIC_OR, A, B)
+#define      conditional_logic_and_new(A,B) conditional_logic_new(CONDITIONAL_LOGIC_AND, A, B)
 Conditional* conditional_string_match_new(WSWindowString, const char*);
 Conditional* conditional_string_contains_new(WSWindowString, const char*);
 Conditional* conditional_regex_match_new(WSWindowString, const char*);

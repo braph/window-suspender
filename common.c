@@ -1,2 +1,2 @@
 #include "common.h"
-int verbosity;
+unsigned int verbosity;

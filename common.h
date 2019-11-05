@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-extern int verbosity;
+extern unsigned int verbosity;
 
 typedef enum {
   LOG_SILENT = 0,
@@ -11,10 +11,6 @@ typedef enum {
   LOG_EVENT,
   LOG_SIGNAL,
 } LogLevel;
-
-#ifndef DEBUG
-#define DEBUG 0
-#endif
 
 #define printerr(...) \
   fprintf(stderr, ##__VA_ARGS__)
@@ -32,20 +28,21 @@ typedef enum {
   if (verbosity >= LOG_SIGNAL) printerr(__VA_ARGS__); \
 } while(0)
 
-#if DEBUG
+#define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
 
-#include <assert.h>
-#define debug(...) \
-  printerr(__VA_ARGS__)
+typedef struct {
+  void **data;
+  unsigned int size;
+  unsigned int allocated;
+} PointerArray;
 
-#else // DEBUG
-
-#define assert(...) \
-  ((void)0)
-#define debug(...) \
-  ((void)0)
-
-#endif // DEBUG
+#define pointer_array_add(ARRAY, DATA) do { \
+  if (G_UNLIKELY((ARRAY)->size >= (ARRAY)->allocated)) { \
+    (ARRAY)->allocated += 4; \
+    (ARRAY)->data = realloc((ARRAY)->data, (ARRAY)->allocated * sizeof(void*)); \
+  } \
+  (ARRAY)->data[(ARRAY)->size++] = DATA; \
+} while (0)
 
 #ifndef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -85,5 +82,24 @@ typedef enum {
   (N == (1U << 30) ? 31 : \
   (N == (1U << 31) ? 32 : \
    0)))))))))))))))))))))))))))))))))
+
+#ifndef DEBUG
+#define DEBUG 0
+#endif
+
+#if DEBUG
+
+#include <assert.h>
+#define debug(...) \
+  printerr(__VA_ARGS__)
+
+#else // DEBUG
+
+#define assert(...) \
+  ((void)0)
+#define debug(...) \
+  ((void)0)
+
+#endif // DEBUG
 
 #endif

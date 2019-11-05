@@ -1,4 +1,5 @@
 #include "kill.h"
+#include "common.h"
 
 #include <time.h>
 #include <ctype.h>
@@ -48,10 +49,10 @@ void process_rule_add(const char *name, GSList *subprocesses) {
  *  10993 (blabla) S 10415 ...
  *  PID     NAME   S PPID  ...
  */
-static int get_ppid_and_name(const char *pid, char **name) {
+static inline int get_ppid_and_name(const char *pid, char **name) {
   int fd, n, ppid;
-  char buf[256], *name_begin, *name_end, *ppid_begin;
-  sprintf(buf, PROC_FS "/%s/stat", pid);
+  char buf[128], *name_begin, *name_end, *ppid_begin;
+  sprintf(buf, PROC_FS "/%.16s/stat", pid);
   if ((fd = open(buf, O_RDONLY)) < 0)
     return 0;
   n = read(fd, buf, sizeof(buf) - 1);
@@ -68,7 +69,7 @@ static int get_ppid_and_name(const char *pid, char **name) {
   return ppid;
 }
 
-static void read_processes()
+static inline void read_processes()
 {
   while (processes_size)
     free(processes[--processes_size].name);
@@ -99,21 +100,23 @@ static void read_processes()
 void kill_children(int pid, int sig)
 {
   time_t now = time(NULL);
-  if (now - last_update >= PROCESS_UPDATE_INTERVAL) {
+  if (G_UNLIKELY(now - last_update >= PROCESS_UPDATE_INTERVAL)) {
     read_processes();
     last_update = now;
   }
 
   struct proc *parent = NULL;
-  GSList *children = NULL;
+  static PointerArray children = { 0 }; // Static, saves us allocates
+  children.size = 0; // Clear, but keep allocated memory
 
   for (unsigned int i = 0; i < processes_size; ++i)
     if (processes[i].ppid == pid)
-      children = g_slist_prepend(children, &processes[i]);
+      pointer_array_add(&children, &processes[i]);
     else if (processes[i].pid == pid)
       parent = &processes[i];
 
-  if (parent && children) {
+  if (parent && children.size) {
+    // Find allowed subprocess names for the parent processs
     GSList *allowed_subprocesses = NULL;
     for (GSList *p = process_rules; p; p = p->next)
       if (!strcmp(parent->name, ((ProcessRule*) p->data)->name)) {
@@ -121,18 +124,23 @@ void kill_children(int pid, int sig)
         break;
       }
 
-    for (; children; children = children->next) {
-      struct proc *child = children->data;
-      if (!strcmp(child->name, parent->name))
-        goto KILL;
-      for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
-        if (!strcmp(child->name, subprocess->data))
-          goto KILL;
-      continue;
-KILL: kill(child->pid, sig);
-      kill_children(child->pid, sig);
-    }
-  }
+    int to_kill[64];
+    unsigned int to_kill_size = 0;
 
-  g_slist_free(children);
+    for (unsigned int i = 0; i < children.size && to_kill_size < ARRAY_SIZE(to_kill); ++i) {
+      struct proc *child = children.data[i];
+      if (!strcmp(child->name, parent->name))
+        to_kill[to_kill_size++] = child->pid;
+      else {
+        for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
+          if (!strcmp(child->name, subprocess->data)) {
+            to_kill[to_kill_size++] = child->pid;
+            break;
+          }
+      }
+    }
+
+    while (to_kill_size--)
+      kill(to_kill[to_kill_size], sig), kill_children(to_kill[to_kill_size], sig);
+  }
 }

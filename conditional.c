@@ -26,7 +26,7 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
       return str && strstr(str, this.klass.string_match.string);
     case CONDITIONAL_REGEX_MATCH:
       str = window_get_string(win, this.klass.string_match.field);
-      return str && !regexec(&this.klass.regex_match.regex, str, 0, 0, 0);
+      return str && !regexec(this.klass.regex_match.regex, str, 0, 0, 0);
     case CONDITIONAL_WINDOWTYPE:
       return wnck_window_get_window_type(win) == this.klass.windowtype.type;
     case CONDITIONAL_WINDOWSTATE:
@@ -60,7 +60,8 @@ void conditional_free(Conditional* self) {
     conditional_free(this.klass.logic.a);
     break;
   case CONDITIONAL_REGEX_MATCH:
-    regfree(&this.klass.regex_match.regex);
+    regfree(this.klass.regex_match.regex);
+    free(this.klass.regex_match.regex);
     break;
   default:
     break; /* -Wpedantic */
@@ -90,7 +91,7 @@ Conditional* conditional_string_match_new(WSWindowString field, const char *stri
 }
 
 Conditional* conditional_string_contains_new(WSWindowString field, const char *string) {
-  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_MATCH, strlen(string));
+  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_CONTAINS, strlen(string));
   this.klass.string_match.field = field;
   strcpy(this.klass.string_match.string, string);
   return self;
@@ -99,10 +100,12 @@ Conditional* conditional_string_contains_new(WSWindowString field, const char *s
 Conditional* conditional_regex_match_new(WSWindowString field, const char *string) {
   CREATE_SELF(CONDITIONAL_REGEX_MATCH);
   this.klass.regex_match.field = field;
-  if ((errno = regcomp(&this.klass.regex_match.regex, string, 0))) {
+  this.klass.regex_match.regex = malloc(sizeof(regex_t));
+  if ((errno = regcomp(this.klass.regex_match.regex, string, 0))) {
     char msg[256];
-    regerror(errno, &this.klass.regex_match.regex, msg, sizeof(msg));
+    regerror(errno, this.klass.regex_match.regex, msg, sizeof(msg));
     printerr("Invalid Regex: `%s`: %s\n", string, msg);
+    free(this.klass.regex_match.regex);
     free(self);
     return NULL;
   }

@@ -162,7 +162,7 @@ process 'chrome-sandbox' has children 'bnox';
 
 # Suspend windows that are not directly in the foreground
 (stackposition >= 1) {
-  suspend --suspend-delay 1000 --refresh-delay 5000 --refresh-duration 1;
+  suspend --suspend-delay 1000 --refresh-delay 1000 --refresh-duration 1;
   return;
 }
 

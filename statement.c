@@ -10,7 +10,7 @@
 /* Get all statements that *should* be executed and store them in $list.
  * If a "return" statement occurs, return FALSE and stop traversing the
  * statement list. */
-bool statement_get_matched(Statement *self, WnckWindow *win, StatementList *list) {
+bool statement_get_matched(Statement *self, WnckWindow *win, PointerArray *list) {
   bool continue_ = true;
 
   switch (this.type) {
@@ -23,11 +23,7 @@ bool statement_get_matched(Statement *self, WnckWindow *win, StatementList *list
   case STATEMENT_NOOP:
     break;
   default:
-    if (list->size == list->allocated) {
-      list->allocated += 8;
-      list->list = realloc(list->list, sizeof(Statement*) * list->allocated);
-    }
-    list->list[list->size++] = self;
+    pointer_array_add(list, self);
     break;
   }
 
@@ -54,6 +50,8 @@ void statement_execute(Statement *self, WnckWindow *win) {
   case STATEMENT_RESUME:
     window_resume(win);
     break;
+#define INCLUDE_STATEMENT_ACTIONS_EXECUTE_CODE
+#include "actions.gen.h"
   default:
     break; /* -Wpedantic */
   }
@@ -122,7 +120,6 @@ Statement* statement_noop_new() {
 void statement_dump(Statement *self, int indent, bool with_trailing) {
   #define outf(FMT, ...) \
     printerr("%*s" FMT, indent, "", ##__VA_ARGS__)
-
   switch (this.type) {
   case STATEMENT_IF:
     outf("(");
@@ -142,7 +139,7 @@ void statement_dump(Statement *self, int indent, bool with_trailing) {
         this.klass.suspend.refresh_duration);
     break;
   case STATEMENT_RESUME:
-    outf("resume (INTERNAL);\n");
+    outf("resume;\n");
     break;
   case STATEMENT_PRINT:
     outf("print \"%s\";\n", this.klass.print.string);
@@ -153,6 +150,8 @@ void statement_dump(Statement *self, int indent, bool with_trailing) {
   case STATEMENT_NOOP:
     outf(";\n");
     break;
+#define INCLUDE_STATEMENT_ACTIONS_DUMP_CODE
+#include "actions.gen.h"
   }
   if (with_trailing && this.next)
     statement_dump(this.next, indent, with_trailing);

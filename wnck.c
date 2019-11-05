@@ -55,18 +55,18 @@ const char *window_states_to_str(WnckWindowState state) {
     return tmp;
 
   str[0] = '\0';
-  for (unsigned int i = 0; state && i <= WNCK_WINDOW_STATE_HIGHEST_BIT; ++i) {
+  str[1] = '\0';
+  for (unsigned int i = 0; state && i < WNCK_WINDOW_STATE_HIGHEST_BIT; ++i) {
     if (state & (1 << i)) {
       state |= (1 << i);
       if ((tmp = window_state_to_str(1 << i))) {
-        if (str[0])
-          strcat(str, ",");
+        strcat(str, ",");
         strcat(str, tmp);
       }
     }
   }
 
-  return str;
+  return str + 1;
 }
 
 /* ============================================================================
@@ -76,7 +76,7 @@ const char *window_states_to_str(WnckWindowState state) {
 #undef wnck_window_get_state /* enable this funtion */
 
 WnckWindowState window_get_state(WnckWindow *win) {
-  int state = wnck_window_get_state(win);
+  unsigned int state = wnck_window_get_state(win);
   WnckWorkspace
     *cur_workspace = wnck_screen_get_active_workspace(screen),
     *win_workspace = wnck_window_get_workspace(win);
@@ -105,7 +105,7 @@ unsigned int window_get_stackposition(WnckWindow *win) {
   if (! workspace)
     workspace = wnck_window_get_workspace(win);
 
-  // We don't know the workspace. The most sane value is to return a
+  // We don't know the workspace. The most sane value to return is a
   // stackposition of 0.
   if (! workspace)
     return 0;
@@ -144,11 +144,10 @@ const char* window_get_workspace_name(WnckWindow *win) {
  * windump()
  * ==========================================================================*/
 
-#define MAXLEN 50
 const char* windump(WnckWindow *win) {
     static char buf[1024];
 
-    if (win == NULL)
+    if (G_UNLIKELY(win == NULL))
       return "(window == NULL)";
 
     const char
@@ -164,18 +163,15 @@ const char* windump(WnckWindow *win) {
       workspace_num = window_get_workspace_number(win),
       title_len = strlen(title);
 
-    char *title_truncated = strdup(title);
-    if (title_len > MAXLEN) {
-      title_truncated[MAXLEN/2 + 0] = '.';
-      title_truncated[MAXLEN/2 + 1] = '.';
-      title_truncated[MAXLEN/2 + 2] = '.';
-      strcpy(&title_truncated[MAXLEN/2 + 3], title + (title_len - MAXLEN/2 + 3));
-    }
+    if (title_len > 50 + 3 /*...*/)
+      snprintf(buf, sizeof(buf), "\"%.25s...%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s",
+        title, title + (title_len - 25),
+        klass, group, workspace_num, workspace, stack_pos, pid, type, states);
+    else
+      snprintf(buf, sizeof(buf), "\"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s",
+        title,
+        klass, group, workspace_num, workspace, stack_pos, pid, type, states);
 
-    snprintf(buf, sizeof(buf), "\"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s",
-      title_truncated, klass, group, workspace_num, workspace, stack_pos, pid, type, states);
-
-    free(title_truncated);
     return buf;
 }
 

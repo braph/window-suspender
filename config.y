@@ -68,6 +68,13 @@ Statement* parse_config(const char *file) {
 %token COND_TYPE COND_STACKPOSITION COND_STATE COND_WORKSPACE_NUMBER
 %token NOT AND_AND OR_OR
 
+/* Actions */
+%token CLOSE MINIMIZE UNMINIMIZE MAXIMIZE UNMAXIMIZE MAXIMIZE_HORIZONTALLY
+%token UNMAXIMIZE_HORIZONTALLY MAXIMIZE_VERTICALLY UNMAXIMIZE_VERTICALLY
+%token SHADE UNSHADE MAKE_ABOVE UNMAKE_ABOVE MAKE_BELOW UNMAKE_BELOW STICK UNSTICK
+%token SET_SKIP_PAGER UNSET_SKIP_PAGER SET_SKIP_TASKLIST UNSET_SKIP_TASKLIST
+%token SET_FULLSCREEN UNSET_FULLSCREEN PIN UNPIN ACTIVATE ACTIVATE_TRANSIENT
+
 %type <conditional> condition
 %type <statement> config statement statement_list
 %type <statement> compound_statement command_statement if_statement suspend_statement
@@ -94,7 +101,7 @@ process_children_list
     ;
 
 process_children
-    : PROCESS STRING HAS CHILDREN string_list ';' { process_rule_add(strdup($2), $5); free($2); }
+    : PROCESS STRING HAS CHILDREN string_list ';' { process_rule_add($2, $5); free($2); }
     ;
 
 string_list
@@ -155,5 +162,35 @@ command_statement
     | SYSTEM STRING ';' { $$ = statement_system_new($2); free($2); }
     | RETURN ';'        { $$ = statement_return_new(); }
     | suspend_statement ';'
+    /* Actions are generated using:
+          cpp -P -D GENERATE_YACC_RULES actions.gen.h | column -t
+    */
+    | CLOSE                   ';' { $$ = statement_close_new();                   }
+    | MINIMIZE                ';' { $$ = statement_minimize_new();                }
+    | UNMINIMIZE              ';' { $$ = statement_unminimize_new();              }
+    | MAXIMIZE                ';' { $$ = statement_maximize_new();                }
+    | UNMAXIMIZE              ';' { $$ = statement_unmaximize_new();              }
+    | MAXIMIZE_HORIZONTALLY   ';' { $$ = statement_maximize_horizontally_new();   }
+    | UNMAXIMIZE_HORIZONTALLY ';' { $$ = statement_unmaximize_horizontally_new(); }
+    | MAXIMIZE_VERTICALLY     ';' { $$ = statement_maximize_vertically_new();     }
+    | UNMAXIMIZE_VERTICALLY   ';' { $$ = statement_unmaximize_vertically_new();   }
+    | SHADE                   ';' { $$ = statement_shade_new();                   }
+    | UNSHADE                 ';' { $$ = statement_unshade_new();                 }
+    | MAKE_ABOVE              ';' { $$ = statement_make_above_new();              }
+    | UNMAKE_ABOVE            ';' { $$ = statement_unmake_above_new();            }
+    | MAKE_BELOW              ';' { $$ = statement_make_below_new();              }
+    | UNMAKE_BELOW            ';' { $$ = statement_unmake_below_new();            }
+    | STICK                   ';' { $$ = statement_stick_new();                   }
+    | UNSTICK                 ';' { $$ = statement_unstick_new();                 }
+    | SET_SKIP_PAGER          ';' { $$ = statement_set_skip_pager_new();          }
+    | UNSET_SKIP_PAGER        ';' { $$ = statement_unset_skip_pager_new();        }
+    | SET_SKIP_TASKLIST       ';' { $$ = statement_set_skip_tasklist_new();       }
+    | UNSET_SKIP_TASKLIST     ';' { $$ = statement_unset_skip_tasklist_new();     }
+    | SET_FULLSCREEN          ';' { $$ = statement_set_fullscreen_new();          }
+    | UNSET_FULLSCREEN        ';' { $$ = statement_unset_fullscreen_new();        }
+    | PIN                     ';' { $$ = statement_pin_new();                     }
+    | UNPIN                   ';' { $$ = statement_unpin_new();                   }
+    | ACTIVATE                ';' { $$ = statement_activate_new();                }
+    | ACTIVATE_TRANSIENT      ';' { $$ = statement_activate_transient_new();      }
     ;
 

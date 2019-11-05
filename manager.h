@@ -3,7 +3,7 @@
 
 #include "wnck.h"
 
-void manager_init();
+int  manager_init();
 void window_resume(WnckWindow*);
 void window_suspend(WnckWindow*, int, int, int);
 void restore_processes();
