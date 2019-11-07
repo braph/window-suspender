@@ -2,7 +2,6 @@
 #include "common.h"
 
 #include <time.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,7 +20,7 @@ static struct proc { int pid, ppid; char *name; } *processes;
 static unsigned int processes_size;
 static unsigned int processes_allocated;
 
-/* TODO: This is a bit messy for now, clean this up. */
+/* TODO: This is actually part of our configuration ... */
 typedef struct {
   char *name;
   GSList *subprocesses;
@@ -65,8 +64,7 @@ static inline int get_ppid_and_name(const char *pid, char **name) {
   if (! (ppid_begin = strpbrk(name_end, "0123456789"))) return 0;
   if (! (ppid       = atoi(ppid_begin)))                return 0;
   *name_end = '\0';
-  *name = strdup(name_begin + 1);
-  return ppid;
+  return (*name = strdup(name_begin + 1)), ppid;
 }
 
 static void read_processes()
@@ -91,7 +89,7 @@ static void read_processes()
         processes = realloc(processes, processes_allocated * sizeof(*processes));
       }
       processes[processes_size++] = process;
-      //printf("Added %5d PPID=%5d %s\n", process.pid, process.ppid, process.name);
+      //log_debug("Added %5d PPID=%5d %s\n", process.pid, process.ppid, process.name);
     }
     closedir(dir);
   }
@@ -141,7 +139,7 @@ void kill_children(int pid, int sig)
     }
 
     while (to_kill_size--) {
-      //printf("Killing %d with %d\n", to_kill[to_kill_size], sig);
+      //log_debug("Killing %d with %d\n", to_kill[to_kill_size], sig);
       kill(to_kill[to_kill_size], sig);
       kill_children(to_kill[to_kill_size], sig);
     }

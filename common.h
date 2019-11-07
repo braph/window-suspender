@@ -13,19 +13,25 @@ typedef enum {
 } LogLevel;
 
 #define printerr(...) \
-  fprintf(stderr, ##__VA_ARGS__)
+  printf(__VA_ARGS__)
 
-#define verbose(...) do { \
+#define log_verbose(...) do { \
   if (DEBUG || verbosity) \
     printerr(__VA_ARGS__); \
 } while(0)
 
 #define log_event(...) do { \
-  if (verbosity >= LOG_EVENT) printerr(__VA_ARGS__); \
+  if (DEBUG || verbosity >= LOG_EVENT) \
+    printerr(__VA_ARGS__); \
 } while(0)
 
 #define log_signal(...) do { \
-  if (verbosity >= LOG_SIGNAL) printerr(__VA_ARGS__); \
+  if (DEBUG || verbosity >= LOG_SIGNAL) \
+    printerr(__VA_ARGS__); \
+} while(0)
+
+#define log_critical(...) do { \
+  printerr(__VA_ARGS__); \
 } while(0)
 
 #define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
@@ -38,7 +44,7 @@ typedef struct {
 
 #define pointer_array_add(ARRAY, DATA) do { \
   if (G_UNLIKELY((ARRAY)->size >= (ARRAY)->allocated)) { \
-    (ARRAY)->allocated += 4; \
+    (ARRAY)->allocated += 8; \
     (ARRAY)->data = realloc((ARRAY)->data, (ARRAY)->allocated * sizeof(void*)); \
   } \
   (ARRAY)->data[(ARRAY)->size++] = DATA; \
@@ -90,15 +96,13 @@ typedef struct {
 #if DEBUG
 
 #include <assert.h>
-#define debug(...) \
+#define log_debug(...) \
   printerr(__VA_ARGS__)
 
 #else // DEBUG
 
-#define assert(...) \
-  ((void)0)
-#define debug(...) \
-  ((void)0)
+#define assert(...)    ((void)0)
+#define log_debug(...) ((void)0)
 
 #endif // DEBUG
 

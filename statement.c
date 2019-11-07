@@ -39,7 +39,7 @@ void statement_execute(Statement *self, WnckWindow *win) {
     printf("%s\n", this.klass.print.string);
     break;
   case STATEMENT_SYSTEM:
-    system_with_winenv(this.klass.system.string, win);
+    system_with_window_environment(this.klass.system.string, win);
     break;
   case STATEMENT_SUSPEND:
     window_suspend(win,
@@ -73,8 +73,7 @@ void statement_free(Statement *self) {
 }
 
 #define CREATE_SELF_PLUS_SPACE(TYPE, SPACE) \
-  Statement* self = malloc(sizeof(Statement) + SPACE); \
-  this.next = NULL; \
+  Statement* self = calloc(1, sizeof(Statement) + SPACE); \
   this.type = TYPE
 
 #define CREATE_SELF(TYPE) \
@@ -122,42 +121,42 @@ Statement* statement_action_new(statement_type action_type) {
   return self;
 }
 
-void statement_dump(Statement *self, int indent, bool with_trailing) {
+void statement_dump(Statement *self, int indent, bool dump_list) {
   #define outf(FMT, ...) \
     printerr("%*s" FMT, indent, "", ##__VA_ARGS__)
   switch (this.type) {
   case STATEMENT_IF:
     outf("(");
     conditional_dump(this.klass._if.conditional);
-    printerr(")\n");
-    outf("{\n");
-    statement_dump(this.klass._if.statement, indent+4, with_trailing);
-    outf("}\n");
+    printerr(")\n%*s{\n", indent, "");
+    statement_dump(this.klass._if.statement, indent+4, dump_list);
+    outf("}");
     break;
   case STATEMENT_RETURN:
-    outf("return;\n");
+    outf("return");
     break;
   case STATEMENT_SUSPEND:
-    outf("suspend --suspend_delay=%u --refresh_delay=%u --refresh_duration=%u;\n",
+    outf("suspend --suspend_delay=%u --refresh_delay=%u --refresh_duration=%u",
         this.klass.suspend.suspend_delay,
         this.klass.suspend.refresh_delay,
         this.klass.suspend.refresh_duration);
     break;
   case STATEMENT_RESUME:
-    outf("resume;\n");
+    outf("resume");
     break;
   case STATEMENT_PRINT:
-    outf("print \"%s\";\n", this.klass.print.string);
+    outf("print \"%s\"", this.klass.print.string);
     break;
   case STATEMENT_SYSTEM:
-    outf("system \"%s\";\n", this.klass.system.string);
+    outf("system \"%s\"", this.klass.system.string);
     break;
   case STATEMENT_NOOP:
-    outf(";\n");
+    outf("(NOOP)");
     break;
 #define INCLUDE_STATEMENT_ACTIONS_DUMP_CODE
 #include "actions.gen.h"
   }
-  if (with_trailing && this.next)
-    statement_dump(this.next, indent, with_trailing);
+  printf(";\n");
+  if (dump_list && this.next)
+    statement_dump(this.next, indent, dump_list);
 }

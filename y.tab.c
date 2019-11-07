@@ -82,13 +82,13 @@
 int yylex();
 int yyparse();
 extern FILE *yyin;
-extern int yylineno;
+extern int yylineno, yylinepos;
 static Statement *config;
 static int parsing_error;
 
 void yyerror(const char *str)
 {
-  printerr("Error: %s (line: %d)\n", str, yylineno);
+  printerr("Error: %s (line: %d:%d)\n", str, yylineno, yylinepos);
   parsing_error = 1;
 }
 
@@ -139,7 +139,7 @@ Statement* parse_config(const char *file) {
 # define YY_YY_Y_TAB_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
-# define YYDEBUG 1
+# define YYDEBUG 0
 #endif
 #if YYDEBUG
 extern int yydebug;
@@ -232,7 +232,7 @@ union YYSTYPE
   char *string;
   WnckWindowType type;
   WnckWindowState state;
-  WSWindowString field;
+  window_string_id field;
   statement_type action_type;
   hook_type hook;
   comparison_type comparison;

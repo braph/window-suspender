@@ -1,4 +1,5 @@
 #include "system.h"
+#include "conditional.h"
 #include <sys/wait.h>
 #include <stdlib.h>
 
@@ -24,7 +25,7 @@ static const char* const WINDOW_IS[WNCK_WINDOW_STATE_HIGHEST_BIT] = {
 
 static void export_window_variables(WnckWindow *win) {
   const char *str;
-  char buf[32];
+  char buf[20];
 
 #define export(NAME, VALUE) \
   setenv(NAME, VALUE, 1)
@@ -61,10 +62,14 @@ static void export_window_variables(WnckWindow *win) {
   export("WINDOW_TYPE", window_type_to_str(wnck_window_get_window_type(win)));
   export("WINDOW_STATE", window_states_to_str(states));
   export("WINDOW_WORKSPACE", window_get_workspace_name(win));
+  export("WINDOW_HOOK", hook_to_str(window_hook));
 }
 
-int system_with_winenv(const char *string, WnckWindow *win) {
+int system_with_window_environment(const char *string, WnckWindow *win) {
   export_window_variables(win);
+#if 1
+  return !system(string);
+#else
   int child, retval;
   switch ((child = fork())) {
     case -1:
@@ -79,4 +84,5 @@ int system_with_winenv(const char *string, WnckWindow *win) {
       else
         return 0;
   }
+#endif
 }

@@ -17,17 +17,19 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
     case CONDITIONAL_LOGIC_NOT:
       return!conditional_check(this.klass.logic.a, win);
     case CONDITIONAL_LOGIC_OR:
-      return conditional_check(this.klass.logic.a, win) || conditional_check(this.klass.logic.b, win);
+      return conditional_check(this.klass.logic.a, win)
+          || conditional_check(this.klass.logic.b, win);
     case CONDITIONAL_LOGIC_AND:
-      return conditional_check(this.klass.logic.a, win) && conditional_check(this.klass.logic.b, win);
+      return conditional_check(this.klass.logic.a, win)
+          && conditional_check(this.klass.logic.b, win);
     case CONDITIONAL_STRING_MATCH:
-      str = window_get_string(win, this.klass.string_match.field);
+      str = window_get_string_by_id(win, this.klass.string_match.field);
       return str && !strcmp(str, this.klass.string_match.string);
     case CONDITIONAL_STRING_CONTAINS:
-      str = window_get_string(win, this.klass.string_match.field);
+      str = window_get_string_by_id(win, this.klass.string_match.field);
       return str && strstr(str, this.klass.string_match.string);
     case CONDITIONAL_REGEX_MATCH:
-      str = window_get_string(win, this.klass.string_match.field);
+      str = window_get_string_by_id(win, this.klass.regex_match.field);
       return str && !regexec(this.klass.regex_match.regex, str, 0, 0, 0);
     case CONDITIONAL_WINDOWTYPE:
       return wnck_window_get_window_type(win) == this.klass.windowtype.type;
@@ -36,9 +38,11 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
     case CONDITIONAL_HOOK:
       return window_hook == this.klass.hook.hook;
     case CONDITIONAL_STACKPOSITION:
+      cmp = window_get_stackposition(win);
+      goto compare_number;
     case CONDITIONAL_WORKSPACE_NUMBER:
-      cmp = (this.type == CONDITIONAL_STACKPOSITION ?
-          window_get_stackposition(win) : window_get_workspace_number(win));
+      cmp = window_get_workspace_number(win);
+compare_number:
       cmp -= this.klass.numeric.number;
       switch (this.klass.numeric.comparison) {
         case COMPARE_EQUAL:         return cmp == 0;
@@ -49,9 +53,10 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
         case COMPARE_GREATER_EQUAL: return cmp >= 0;
       }
     case CONDITIONAL_SYSTEM:
-      return system_with_winenv(this.klass.system.string, win);
-    default: abort();
+      return system_with_window_environment(this.klass.system.string, win);
   }
+  assert(!"reached");
+  return 0;
 }
 
 void conditional_free(Conditional* self) {
@@ -87,31 +92,32 @@ Conditional* conditional_logic_new(conditional_type type, Conditional *a, Condit
   return self;
 }
 
-Conditional* conditional_string_match_new(WSWindowString field, const char *string) {
+Conditional* conditional_string_match_new(window_string_id field, const char *string) {
   CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_MATCH, strlen(string));
   this.klass.string_match.field = field;
   strcpy(this.klass.string_match.string, string);
   return self;
 }
 
-Conditional* conditional_string_contains_new(WSWindowString field, const char *string) {
+Conditional* conditional_string_contains_new(window_string_id field, const char *string) {
   CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_CONTAINS, strlen(string));
   this.klass.string_match.field = field;
   strcpy(this.klass.string_match.string, string);
   return self;
 }
 
-Conditional* conditional_regex_match_new(WSWindowString field, const char *string) {
+Conditional* conditional_regex_match_new(window_string_id field, const char *string) {
   CREATE_SELF(CONDITIONAL_REGEX_MATCH);
   this.klass.regex_match.field = field;
   this.klass.regex_match.regex = malloc(sizeof(regex_t));
-  if ((errno = regcomp(this.klass.regex_match.regex, string, 0))) {
+  if ((errno = regcomp(this.klass.regex_match.regex, string, REG_NOSUB|REG_EXTENDED))) {
     char msg[256];
     regerror(errno, this.klass.regex_match.regex, msg, sizeof(msg));
     printerr("Invalid Regex: `%s`: %s\n", string, msg);
-    free(this.klass.regex_match.regex);
-    free(self);
-    return NULL;
+    //TODO: Error handling...
+    //free(this.klass.regex_match.regex);
+    //free(self);
+    //return NULL;
   }
   return self;
 }
@@ -171,13 +177,13 @@ void conditional_dump(Conditional* self) {
     o(")");
     break;
   case CONDITIONAL_STRING_MATCH:
-    o("%s == %s", window_field_to_string(this.klass.string_match.field), this.klass.string_match.string);
+    o("%s == %s", window_string_id_to_str(this.klass.string_match.field), this.klass.string_match.string);
     break;
   case CONDITIONAL_STRING_CONTAINS:
-    o("%s contains %s", window_field_to_string(this.klass.string_match.field), this.klass.string_match.string);
+    o("%s contains %s", window_string_id_to_str(this.klass.string_match.field), this.klass.string_match.string);
     break;
   case CONDITIONAL_REGEX_MATCH:
-    o("%s =~ $regex", window_field_to_string(this.klass.regex_match.field));
+    o("%s =~ $regex", window_string_id_to_str(this.klass.regex_match.field));
     break;
   case CONDITIONAL_WINDOWTYPE:
     o("type == %s", window_type_to_str(this.klass.windowtype.type));
@@ -191,18 +197,62 @@ void conditional_dump(Conditional* self) {
   case CONDITIONAL_STACKPOSITION:
   case CONDITIONAL_WORKSPACE_NUMBER:
     o("%s %s %d",
-        (this.type == CONDITIONAL_STACKPOSITION ? "stackposition" : "workspace_number"),
-        (char[6][3]) {
+        (this.type == CONDITIONAL_STACKPOSITION
+         ? "stackposition"
+         : "workspace_number"),
+        (const char[6][3]) {
         [COMPARE_EQUAL]         = "==",
         [COMPARE_UNEQUAL]       = "!=",
-        [COMPARE_LESS]          = "<\0",
+        [COMPARE_LESS]          = "<",
         [COMPARE_LESS_EQUAL]    = "<=",
-        [COMPARE_GREATER]       = ">\0",
-        [COMPARE_GREATER_EQUAL] = ">="    }[this.klass.numeric.comparison], 
+        [COMPARE_GREATER]       = ">",
+        [COMPARE_GREATER_EQUAL] = ">=" }[this.klass.numeric.comparison],
         this.klass.numeric.number);
     break;
   case CONDITIONAL_SYSTEM:
     o("system \"%s\"", this.klass.system.string);
     break;
+  }
+}
+
+const char* hook_to_str(hook_type hook) {
+  switch (hook) {
+    case HOOK_OPENED:                   return "opened";
+    case HOOK_CLOSED:                   return "closed";
+    case HOOK_CLASS_CHANGED:            return "class_changed";
+    case HOOK_NAME_CHANGED:             return "name_changed";
+    case HOOK_ROLE_CHANGED:             return "role_changed";
+    case HOOK_TYPE_CHANGED:             return "type_changed";
+    case HOOK_ICON_CHANGED:             return "icon_changed";
+    case HOOK_WORKSPACE_CHANGED:        return "workspace_changed";
+    case HOOK_STATE_CHANGED:            return "state_changed";
+    case HOOK_WINDOW_STACKING_CHANGED:  return "window_stacking_changed";
+    case HOOK_ACTIVE_WORKSPACE_CHANGED: return "active_workspace_changed";
+    case HOOK_SHOWING_DESKTOP_CHANGED:  return "showing_desktop_changed";
+    default:                            return NULL;
+  }
+}
+
+const char* window_string_id_to_str(window_string_id field) {
+  switch (field) {
+    case WINDOW_TITLE:     return "title";
+    case WINDOW_GROUP:     return "groupname";
+    case WINDOW_CLASS:     return "classname";
+    case WINDOW_ROLE:      return "role";
+    case WINDOW_ICON_NAME: return "iconname";
+    case WINDOW_WORKSPACE: return "workspace";
+    default:               return NULL;
+  }
+}
+
+const char* window_get_string_by_id(WnckWindow *win, window_string_id field) {
+  switch (field) {
+    case WINDOW_TITLE:     return wnck_window_get_name(win);
+    case WINDOW_GROUP:     return wnck_window_get_class_instance_name(win);
+    case WINDOW_CLASS:     return wnck_window_get_class_group_name(win);
+    case WINDOW_ROLE :     return wnck_window_get_role(win);
+    case WINDOW_ICON_NAME: return wnck_window_get_icon_name(win);
+    case WINDOW_WORKSPACE: return window_get_workspace_name(win);
+    default:               return NULL;
   }
 }

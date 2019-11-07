@@ -10,13 +10,12 @@
 #       command;
 #       ...
 #     }
-#   - Keywords (like `state`, `stackposition`, `return`, etc ...) must NOT be
-#     quoted.
+#   - Numbers and keywords (like `state`, `stackposition`, `return`, etc ...)
+#     must NOT be quoted.
 #   - Strings have to be quoted in double or single quotes.
 #     Currently no escape-mechanisms are provided, so you have to put the string
-#     in single quotes if it contains a double quote an vice versa.
+#     in single quotes if it contains a double quote and vice versa.
 #     If your string contains both characters ... well, bad luck!
-#   - Numbers may not be quoted
 #
 #  CONDITIONS
 #
@@ -81,13 +80,15 @@
 #       Immediately stop further processing.
 #
 #     print <STRING>
-#       Prints STRING with trailing a trailing newline.
+#       Prints STRING with a trailing newline.
 #
 #     system <STRING>
-#       Executes STRING in a shell.
+#       Executes STRING in a shell. Can also be used inside a conditional.
 #
 #     suspend [--suspend-delay=<MILIS>] [--refresh-delay=<MILIS>] [--refresh-duration=<MILIS>]
 #       Suspends the window.
+#
+#     TODO: add actions (maximize, make_above, ...)
 #
 #
 #  ENVIROMENT FOR SYSTEM COMMAND
@@ -106,6 +107,7 @@
 #       $WINDOW_WORKSPACE
 #       $WINDOW_WORKSPACE_NUMBER
 #       $WINDOW_X / $WINDOW_Y / $WINDOW_WIDTH / $WINDOW_HEIGHT
+#       $WINDOW_HOOK
 #    These window state variables are set to "0" or "1":
 #       $WINDOW_IS_MINIMIZED
 #       $WINDOW_IS_MAXIMIZED_HORIZONTALLY
@@ -120,27 +122,37 @@
 #       $WINDOW_IS_ABOVE
 #       $WINDOW_IS_BELOW
 #       $WINDOW_IS_INACTIVE_WORKSPACE
-#      
+#
 #
 #  TIPS
 #    - Use the xprop or the wnckprop command to obtain information of a window
 #    - Config is best viewed with shell syntax (at least in vim)
+#    - A small refresh (1ms) on every second is recommended, since X11 applications
+#      need to be running for working with the clipboard.
 #
 #
 #  GOOD LUCK!
 # =============================================================================
 
-# The bnox browser has a `chrome-sandbox` subprocess.
-# The `chrome-sandbox` process has `bnox` subprocesses again.
+# When suspending or resuming a window, also kill those subprocesses:
 process 'bnox' has children 'chrome-sandbox';
 process 'chrome-sandbox' has children 'bnox';
+# 1) The bnox browser has a `chrome-sandbox` subprocess.
+# 2) The `chrome-sandbox` process has `bnox` subprocesses again.
 # $ pstree -p (simplified)
 #   bnox(1008)-+
 #               `-chrome-sandbox(1011)-+
 #                                       `-bnox(1892)
 
+# Keep webcam window always above
+(classname == 'mpv' && title =~ '\.jpg\?[0-9]{3,}') {
+  (hook == opened) {
+    make_above;
+  }
+}
+
 # Never suspend media players
-(classname == 'mpv') {
+(classname == 'mpv' || classname == 'vlc') {
   return;
 }
 
@@ -149,12 +161,13 @@ process 'chrome-sandbox' has children 'bnox';
   return;
 }
 
-# Never suspend a browser that's playing Youtube
+# Never suspend a browser with an open Youtube tab
 (classname == 'bnox' && title contains "YouTube") {
   return;
 }
 
-# When a game is opened, stop all downloads and continue them when it is closed.
+# When a game is opened, stop all downloads and continue them when its closed.
+# (sudo required for stopping processes of the package manager).
 (classname == 'openarena.x86_64') {
   (hook == opened) {
     system 'sudo killall --verbose -STOP wget';
@@ -165,9 +178,9 @@ process 'chrome-sandbox' has children 'bnox';
   }
 }
 
-# Minimized windows and windows on inactive workspaces do not need any refresh
+# Minimized windows and windows on inactive workspaces shall be refreshed every minute.
 (state == minimized || state == inactive_workspace) {
-  suspend;
+  suspend --refresh-delay 60000;
   return;
 }
 

@@ -3,6 +3,6 @@
 
 #include "wnck.h"
 
-int system_with_winenv(const char*, WnckWindow*);
+int system_with_window_environment(const char*, WnckWindow*);
 
 #endif

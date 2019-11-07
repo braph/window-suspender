@@ -5,6 +5,8 @@
 #include "conditional.h"
 #include "statement.h"
 #include "y.tab.h"
+
+int yylinepos; // TODO: make yylinepos available in this file
 %}
 
 %option yylineno

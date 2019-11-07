@@ -5,4 +5,7 @@
   Determine this while parsing the configuration. (maybe)
 - Destroy the app
 - Add DBus?
-- Recycling of signal sources?
+- Keywords for logic: 'and', 'or', 'not', maybe 'in'
+- XOR ?
+- Geometry condition, Geometry actions
+- Better string parsing

@@ -9,59 +9,65 @@ WnckScreen *screen;
  * ==========================================================================*/
 
 const char* window_type_to_str(WnckWindowType type) {
-  switch (type) {
-    case WNCK_WINDOW_DESKTOP:       return "desktop";
-    case WNCK_WINDOW_DIALOG:        return "dialog";
-    case WNCK_WINDOW_DOCK:          return "dock";
-    case WNCK_WINDOW_MENU:          return "menu";
-    case WNCK_WINDOW_NORMAL:        return "normal";
-    case WNCK_WINDOW_SPLASHSCREEN:  return "splashscreen";
-    case WNCK_WINDOW_TOOLBAR:       return "toolbar";
-    case WNCK_WINDOW_UTILITY:       return "utility";
-    default:                        return "UNKNOWN";
-  }
+  static const char* const window_types[] = {
+    [WNCK_WINDOW_DESKTOP]      = "desktop",
+    [WNCK_WINDOW_DIALOG]       = "dialog",
+    [WNCK_WINDOW_DOCK]         = "dock",
+    [WNCK_WINDOW_MENU]         = "menu",
+    [WNCK_WINDOW_NORMAL]       = "normal",
+    [WNCK_WINDOW_SPLASHSCREEN] = "splashscreen",
+    [WNCK_WINDOW_TOOLBAR]      = "toolbar",
+    [WNCK_WINDOW_UTILITY]      = "utility",
+  };
+
+  if (type < ARRAY_SIZE(window_types) && window_types[type])
+    return window_types[type];
+  return "UNKNOWN";
 }
 
 /* ============================================================================
  * window_state_to_str() / window_states_to_str()
  * ==========================================================================*/
 
+#define S(STATE, STR) \
+  [GET_BIT_POSITION_OF_FLAG(WNCK_WINDOW_STATE_ ## STATE)-1] = STR
+
+static const char* const window_states[WNCK_WINDOW_STATE_HIGHEST_BIT] = {
+  S(MINIMIZED,              "minimized"),
+  S(MAXIMIZED_HORIZONTALLY, "maximized_horizontally"),
+  S(MAXIMIZED_VERTICALLY,   "maximized_vertically"),
+  S(SHADED,                 "shaded"),
+  S(SKIP_PAGER,             "skip_pager"),
+  S(SKIP_TASKLIST,          "skip_tasklist"),
+  S(STICKY,                 "sticky"),
+  S(HIDDEN,                 "hidden"),
+  S(FULLSCREEN,             "fullscreen"),
+  S(DEMANDS_ATTENTION,      "demands_attention"),
+  S(URGENT,                 "urgent"),
+  S(ABOVE,                  "above"),
+  S(BELOW,                  "below"),
+  S(INACTIVE_WORKSPACE,     "inactive_workspace"),
+};
+
 const char* window_state_to_str(WnckWindowState state) {
-  switch (state) {
-    case WNCK_WINDOW_STATE_MINIMIZED:               return "minimized";
-    case WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY:  return "maximized_horizontally";
-    case WNCK_WINDOW_STATE_MAXIMIZED_VERTICALLY:    return "maximized_vertically";
-    case WNCK_WINDOW_STATE_SHADED:                  return "shaded";
-    case WNCK_WINDOW_STATE_SKIP_PAGER:              return "skip_pager";
-    case WNCK_WINDOW_STATE_SKIP_TASKLIST:           return "skip_tasklist";
-    case WNCK_WINDOW_STATE_STICKY:                  return "sticky";
-    case WNCK_WINDOW_STATE_HIDDEN:                  return "hidden";
-    case WNCK_WINDOW_STATE_FULLSCREEN:              return "fullscreen";
-    case WNCK_WINDOW_STATE_DEMANDS_ATTENTION:       return "demands_attention";
-    case WNCK_WINDOW_STATE_ABOVE:                   return "above";
-    case WNCK_WINDOW_STATE_BELOW:                   return "below";
-    case WNCK_WINDOW_STATE_INACTIVE_WORKSPACE:      return "inactive_workspace";
-    default:                                        return NULL;
-  }
+  for (unsigned int i = 0; i < WNCK_WINDOW_STATE_HIGHEST_BIT; ++i)
+    if ((1<<i) == state)
+      if (window_states[i])
+        return window_states[i];
+  return "UNKNOWN";
 }
 
 const char *window_states_to_str(WnckWindowState state) {
   static char str[256];
-  const char *tmp;
-
-  if (!state)
-    return "";
-  else if ((tmp = window_state_to_str(state)))
-    return tmp;
 
   str[0] = '\0';
   str[1] = '\0';
   for (unsigned int i = 0; state && i < WNCK_WINDOW_STATE_HIGHEST_BIT; ++i) {
     if (state & (1 << i)) {
       state |= (1 << i);
-      if ((tmp = window_state_to_str(1 << i))) {
+      if (window_states[i]) {
         strcat(str, ",");
-        strcat(str, tmp);
+        strcat(str, window_states[i]);
       }
     }
   }
@@ -87,7 +93,7 @@ WnckWindowState window_get_state(WnckWindow *win) {
     return state;
 }
 
-#define wnck_window_get_state(...) USE_WINDOW_GET_STATE_INSTEAD 
+#define wnck_window_get_state(...) USE_WINDOW_GET_STATE_INSTEAD
 
 /* ============================================================================
  * window_get_stackposition()
@@ -145,34 +151,34 @@ const char* window_get_workspace_name(WnckWindow *win) {
  * ==========================================================================*/
 
 const char* windump(WnckWindow *win) {
-    static char buf[1024];
+  static char buf[1024];
 
-    if (G_UNLIKELY(win == NULL))
-      return "(window == NULL)";
+  if (G_UNLIKELY(win == NULL))
+    return "(window == NULL)";
 
-    const char
-      *title = wnck_window_get_name(win),
-      *klass = wnck_window_get_class_group_name(win),
-      *group = wnck_window_get_class_instance_name(win),
-      *type  = window_type_to_str(wnck_window_get_window_type(win)),
-      *states = window_states_to_str(window_get_state(win)),
-      *workspace = window_get_workspace_name(win);
-    int
-      pid = wnck_window_get_pid(win),
-      stack_pos = window_get_stackposition(win),
-      workspace_num = window_get_workspace_number(win),
-      title_len = strlen(title);
+  const char
+    *title = wnck_window_get_name(win),
+    *klass = wnck_window_get_class_group_name(win),
+    *group = wnck_window_get_class_instance_name(win),
+    *type  = window_type_to_str(wnck_window_get_window_type(win)),
+    *states = window_states_to_str(window_get_state(win)),
+    *workspace = window_get_workspace_name(win);
+  int
+    pid = wnck_window_get_pid(win),
+    stack_pos = window_get_stackposition(win),
+    workspace_num = window_get_workspace_number(win),
+    title_len = strlen(title);
 
-    if (title_len > 50 + 3 /*...*/)
-      snprintf(buf, sizeof(buf), "[ \"%.25s...%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s ]",
-        title, title + (title_len - 25),
-        klass, group, workspace_num, workspace, stack_pos, pid, type, states);
-    else
-      snprintf(buf, sizeof(buf), "[ \"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s ]",
-        title,
-        klass, group, workspace_num, workspace, stack_pos, pid, type, states);
+  if (title_len > 50 + 3 /*...*/)
+    snprintf(buf, sizeof(buf), "[ \"%.25s...%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s ]",
+      title, title + (title_len - 25),
+      klass, group, workspace_num, workspace, stack_pos, pid, type, states);
+  else
+    snprintf(buf, sizeof(buf), "[ \"%s\" CLASS=%s GROUP=%s [%d:%s]{%d} PID=%d TYPE=%s STATES=%s ]",
+      title,
+      klass, group, workspace_num, workspace, stack_pos, pid, type, states);
 
-    return buf;
+  return buf;
 }
 
 /* ============================================================================

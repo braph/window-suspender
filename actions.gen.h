@@ -1,6 +1,6 @@
 #if 0
   This file is used for generating the code for window actions (maximize, shade, ...)
-  in statement.h and statement.c.
+  in statement.c and enums statement.h.
 
   It may also be used for generating Lex rules:
     cpp -P -D GENERATE_LEX_RULES "actions.gen.h"
@@ -9,8 +9,6 @@
     #define <COMMAND>
     #include "actions.gen.h"
 #endif
-
-#undef X
 
 #if defined ( INCLUDE_STATEMENT_ACTIONS_ENUMS )
 #define X(UPPER, ...) \
@@ -25,7 +23,7 @@
 #elif defined ( INCLUDE_STATEMENT_ACTIONS_DUMP_CODE )
 #define X(UPPER, LOWER, ...) \
   case STATEMENT_ ## UPPER: \
-    outf(#LOWER ";\n"); \
+    outf(#LOWER); \
   break;
 
 #elif defined ( GENERATE_LEX_RULES )
@@ -69,3 +67,4 @@ X(ACTIVATE_TRANSIENT,      activate_transient,      wnck_window_activate_transie
 #undef INCLUDE_STATEMENT_ACTIONS_EXECUTE_CODE
 #undef INCLUDE_STATEMENT_ACTIONS_DUMP_CODE
 #undef GENERATE_LEX_RULES
+#undef X
