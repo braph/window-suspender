@@ -90,7 +90,7 @@ void window_suspend(WnckWindow *win, int suspend_delay, int refresh_delay, int r
   app->refresh_duration = refresh_duration;
   app->state = STATE_IS_SUSPENDING;
   if (suspend_delay)
-    G_TIMEOUT_ADD(suspend_delay, suspend_callback, app);
+    app->timeout_id = G_TIMEOUT_ADD(suspend_delay, suspend_callback, app);
   else
     suspend_callback(app);
 }
@@ -149,7 +149,11 @@ static gboolean suspend_callback(Application *app) {
 static gboolean refresh_callback(Application *app) {
   log_debug("refresh_callback: %d\n", app->timeout_id);
   kill_wnck_application(app->wnck_app, SIGCONT);
-  app->timeout_id = G_TIMEOUT_ADD(app->refresh_duration, suspend_callback, app);
+  if (app->refresh_duration > 1)
+    app->timeout_id = G_TIMEOUT_ADD(app->refresh_duration, suspend_callback, app);
+  else {
+    suspend_callback(app);
+  }
   return G_SOURCE_REMOVE;
 }
 
@@ -196,7 +200,7 @@ static void application_apply_rules(WnckApplication *app) {
   log_verbose("[ Application \"%s\" %d ]\n",
       wnck_application_get_name(app), wnck_application_get_pid(app));
   WnckWindow *win = NULL;
-  Statement suspend_stmt = {
+  Statement statement = {
     .type = STATEMENT_SUSPEND,
     .klass.suspend = { 0 }
   };
@@ -208,33 +212,31 @@ static void application_apply_rules(WnckApplication *app) {
     if (! window_apply_rules(win, &suspend_statements)) {
       // One window didn't match the criteria for suspend, do a resume instead
       log_verbose("    --> No suspend for: %s\n", windump(win));
-      suspend_stmt.type = STATEMENT_RESUME;
+      statement.type = STATEMENT_RESUME;
     }
   }
 
-  if (suspend_stmt.type == STATEMENT_SUSPEND) {
+  if (statement.type == STATEMENT_SUSPEND) {
     for (unsigned int i = 0; i < suspend_statements.size; ++i) {
-      Statement *statement = (Statement*) suspend_statements.data[i];
+      Statement *s = (Statement*) suspend_statements.data[i];
       // Choose highest suspend_delay
-      suspend_stmt.klass.suspend.suspend_delay = MAX(
-          suspend_stmt.klass.suspend.suspend_delay,
-          statement->klass.suspend.suspend_delay);
+      if (s->klass.suspend.suspend_delay > statement.klass.suspend.suspend_delay)
+        statement.klass.suspend.suspend_delay = s->klass.suspend.suspend_delay;
       // Choose lowest refresh_delay (but ignore 0)
-      if (!suspend_stmt.klass.suspend.refresh_delay ||
-          (statement->klass.suspend.refresh_delay &&
-          statement->klass.suspend.refresh_delay < suspend_stmt.klass.suspend.refresh_delay))
-        suspend_stmt.klass.suspend.refresh_delay = statement->klass.suspend.refresh_delay;
+      if (!statement.klass.suspend.refresh_delay ||
+          (s->klass.suspend.refresh_delay &&
+          s->klass.suspend.refresh_delay < statement.klass.suspend.refresh_delay))
+        statement.klass.suspend.refresh_delay = s->klass.suspend.refresh_delay;
       // Choost highest refresh_duration
-      suspend_stmt.klass.suspend.refresh_duration = MAX(
-          suspend_stmt.klass.suspend.refresh_duration,
-          statement->klass.suspend.refresh_duration);
+      if (s->klass.suspend.refresh_duration > statement.klass.suspend.refresh_duration)
+        statement.klass.suspend.refresh_duration = s->klass.suspend.refresh_duration;
     }
   }
 
   log_verbose("    --> Executing on: %s\n", windump(win));
   if (verbosity)
-    statement_dump(&suspend_stmt, 8, 0);
-  statement_execute(&suspend_stmt, win);
+    statement_dump(&statement, 8, 0);
+  statement_execute(&statement, win);
 }
 
 /* Apply the configuration rules to all applications of the screen */
