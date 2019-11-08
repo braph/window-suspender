@@ -82,7 +82,7 @@ struct Conditional {
 
     struct {
       window_string_id field;
-      regex_t *regex;
+      regex_t regex;
     } regex_match;
 
     struct {

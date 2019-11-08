@@ -72,39 +72,43 @@ void statement_free(Statement *self) {
   free(self);
 }
 
-#define CREATE_SELF_PLUS_SPACE(TYPE, SPACE) \
-  Statement* self = calloc(1, sizeof(Statement) + SPACE); \
-  this.type = TYPE
+#define CREATE_SELF_PLUS_SPACE(TYPE_ENUM, KLASS_STRUCT, SPACE) \
+  Statement* self = calloc(1, CLASS_SIZE(Statement, KLASS_STRUCT) + SPACE); \
+  this.type = TYPE_ENUM
 
-#define CREATE_SELF(TYPE) \
-  CREATE_SELF_PLUS_SPACE(TYPE, 0)
+#define CREATE_EMPTY_SELF(TYPE_ENUM) \
+  Statement* self = calloc(1, offsetof(Statement, klass)); \
+  this.type = TYPE_ENUM
+
+#define CREATE_SELF(TYPE, KLASS_STRUCT) \
+  CREATE_SELF_PLUS_SPACE(TYPE, KLASS_STRUCT, 0)
 
 Statement* statement_if_new(Conditional *conditional, Statement *statement) {
-  CREATE_SELF(STATEMENT_IF);
+  CREATE_SELF(STATEMENT_IF, _if);
   this.klass._if.statement = statement;
   this.klass._if.conditional = conditional;
   return self;
 }
 
 Statement* statement_return_new() {
-  CREATE_SELF(STATEMENT_RETURN);
+  CREATE_EMPTY_SELF(STATEMENT_RETURN);
   return self;
 }
 
 Statement* statement_print_new(const char *string) {
-  CREATE_SELF_PLUS_SPACE(STATEMENT_PRINT, strlen(string));
+  CREATE_SELF_PLUS_SPACE(STATEMENT_PRINT, print, strlen(string));
   strcpy(this.klass.print.string, string);
   return self;
 }
 
 Statement* statement_system_new(const char *string) {
-  CREATE_SELF_PLUS_SPACE(STATEMENT_SYSTEM, strlen(string));
+  CREATE_SELF_PLUS_SPACE(STATEMENT_SYSTEM, system, strlen(string));
   strcpy(this.klass.system.string, string);
   return self;
 }
 
 Statement* statement_suspend_new(unsigned int suspend_delay, unsigned int refresh_delay, unsigned int refresh_duration) {
-  CREATE_SELF(STATEMENT_SUSPEND);
+  CREATE_SELF(STATEMENT_SUSPEND, suspend);
   this.klass.suspend.suspend_delay = suspend_delay;
   this.klass.suspend.refresh_delay = refresh_delay;
   this.klass.suspend.refresh_duration = refresh_duration;
@@ -112,12 +116,12 @@ Statement* statement_suspend_new(unsigned int suspend_delay, unsigned int refres
 }
 
 Statement* statement_noop_new() {
-  CREATE_SELF(STATEMENT_NOOP);
+  CREATE_EMPTY_SELF(STATEMENT_NOOP);
   return self;
 }
 
 Statement* statement_action_new(statement_type action_type) {
-  CREATE_SELF(action_type);
+  CREATE_EMPTY_SELF(action_type);
   return self;
 }
 

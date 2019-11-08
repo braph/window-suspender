@@ -30,7 +30,7 @@ bool conditional_check(Conditional *self, WnckWindow *win) {
       return str && strstr(str, this.klass.string_match.string);
     case CONDITIONAL_REGEX_MATCH:
       str = window_get_string_by_id(win, this.klass.regex_match.field);
-      return str && !regexec(this.klass.regex_match.regex, str, 0, 0, 0);
+      return str && !regexec(&this.klass.regex_match.regex, str, 0, 0, 0);
     case CONDITIONAL_WINDOWTYPE:
       return wnck_window_get_window_type(win) == this.klass.windowtype.type;
     case CONDITIONAL_WINDOWSTATE:
@@ -69,8 +69,7 @@ void conditional_free(Conditional* self) {
     conditional_free(this.klass.logic.a);
     break;
   case CONDITIONAL_REGEX_MATCH:
-    regfree(this.klass.regex_match.regex);
-    free(this.klass.regex_match.regex);
+    regfree(&this.klass.regex_match.regex);
     break;
   default:
     break; /* -Wpedantic */
@@ -78,84 +77,80 @@ void conditional_free(Conditional* self) {
   free(self);
 }
 
-#define CREATE_SELF_PLUS_SPACE(TYPE, SPACE) \
-  Conditional* self = malloc(sizeof(Conditional) + SPACE); \
-  this.type = TYPE
+#define CREATE_SELF_PLUS_SPACE(TYPE_ENUM, KLASS_STRUCT, SPACE) \
+  Conditional* self = malloc(CLASS_SIZE(Conditional, KLASS_STRUCT) + SPACE); \
+  this.type = TYPE_ENUM
 
-#define CREATE_SELF(TYPE) \
-  CREATE_SELF_PLUS_SPACE(TYPE, 0)
+#define CREATE_SELF(TYPE_ENUM, KLASS_STRUCT) \
+  CREATE_SELF_PLUS_SPACE(TYPE_ENUM, KLASS_STRUCT, 0)
 
 Conditional* conditional_logic_new(conditional_type type, Conditional *a, Conditional *b) {
-  CREATE_SELF(type);
+  CREATE_SELF(type, logic);
   this.klass.logic.a = a;
   this.klass.logic.b = b;
   return self;
 }
 
 Conditional* conditional_string_match_new(window_string_id field, const char *string) {
-  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_MATCH, strlen(string));
+  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_MATCH, string_match, strlen(string));
   this.klass.string_match.field = field;
   strcpy(this.klass.string_match.string, string);
   return self;
 }
 
 Conditional* conditional_string_contains_new(window_string_id field, const char *string) {
-  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_CONTAINS, strlen(string));
+  CREATE_SELF_PLUS_SPACE(CONDITIONAL_STRING_CONTAINS, string_match, strlen(string));
   this.klass.string_match.field = field;
   strcpy(this.klass.string_match.string, string);
   return self;
 }
 
 Conditional* conditional_regex_match_new(window_string_id field, const char *string) {
-  CREATE_SELF(CONDITIONAL_REGEX_MATCH);
+  CREATE_SELF(CONDITIONAL_REGEX_MATCH, regex_match);
   this.klass.regex_match.field = field;
-  this.klass.regex_match.regex = malloc(sizeof(regex_t));
-  if ((errno = regcomp(this.klass.regex_match.regex, string, REG_NOSUB|REG_EXTENDED))) {
+  if ((errno = regcomp(&this.klass.regex_match.regex, string, REG_NOSUB|REG_EXTENDED))) {
     char msg[256];
-    regerror(errno, this.klass.regex_match.regex, msg, sizeof(msg));
+    regerror(errno, &this.klass.regex_match.regex, msg, sizeof(msg));
     printerr("Invalid Regex: `%s`: %s\n", string, msg);
     //TODO: Error handling...
-    //free(this.klass.regex_match.regex);
-    //free(self);
-    //return NULL;
   }
   return self;
 }
 
 Conditional* conditional_windowtype_new(WnckWindowType type) {
-  CREATE_SELF(CONDITIONAL_WINDOWTYPE);
+  CREATE_SELF(CONDITIONAL_WINDOWTYPE, windowtype);
   this.klass.windowtype.type = type;
   return self;
 }
 
 Conditional* conditional_windowstate_new(WnckWindowState state) {
-  CREATE_SELF(CONDITIONAL_WINDOWSTATE);
+  CREATE_SELF(CONDITIONAL_WINDOWSTATE, windowstate);
   this.klass.windowstate.state = state;
   return self;
 }
 
 Conditional* conditional_hook_new(hook_type hook) {
-  CREATE_SELF(CONDITIONAL_HOOK);
+  CREATE_SELF(CONDITIONAL_HOOK, hook);
   this.klass.hook.hook = hook;
   return self;
 }
 
 Conditional* conditional_stackposition_new(comparison_type comparison, int number) {
-  CREATE_SELF(CONDITIONAL_STACKPOSITION);
+  CREATE_SELF(CONDITIONAL_STACKPOSITION, numeric);
   this.klass.numeric.number = number;
   this.klass.numeric.comparison = comparison;
   return self;
 }
 
 Conditional* conditional_workspace_number_new(comparison_type comparison, int number) {
-  CREATE_SELF(CONDITIONAL_WORKSPACE_NUMBER);
+  CREATE_SELF(CONDITIONAL_WORKSPACE_NUMBER, numeric);
   this.klass.numeric.number = number;
   this.klass.numeric.comparison = comparison;
   return self;
 }
 
 Conditional* conditional_system_new(const char *string) {
-  CREATE_SELF_PLUS_SPACE(CONDITIONAL_SYSTEM, strlen(string));
+  CREATE_SELF_PLUS_SPACE(CONDITIONAL_SYSTEM, system, strlen(string));
   strcpy(this.klass.system.string, string);
   return self;
 }

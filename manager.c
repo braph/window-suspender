@@ -32,9 +32,44 @@ typedef struct {
 static gboolean suspend_callback(Application*);
 static gboolean refresh_callback(Application*);
 
-#define G_TIMEOUT_ADD(T, CALLBACK, DATA) (T >= 1000 \
-   ? g_timeout_add_seconds(T/1000, (GSourceFunc) CALLBACK, DATA) \
-   : g_timeout_add(T, (GSourceFunc) CALLBACK, DATA))
+#define G_TIMEOUT_RECYCLE_HACK
+#define G_CALLBACK_RECYCLE_HACK
+/* A hack that tries to re-use an existing GTimeoutSource instead of creating
+ * a new one. It relies on the GLib internals. */
+static gboolean g_timeout_add_recycled(guint *id, guint interval, GSourceFunc callback, gpointer data) {
+#ifdef G_TIMEOUT_RECYCLE_HACK
+  if (*id) {
+    struct GTimeoutSource {
+      GSource   source;
+      guint     interval;
+      gboolean  seconds;
+    } *src = (struct GTimeoutSource*) g_main_context_find_source_by_id(NULL, *id);
+
+    if (src) {
+      src->seconds  = (interval >= 1000 ? TRUE : FALSE);
+      src->interval = (interval >= 1000 ? interval/1000 : interval);
+#ifdef G_CALLBACK_RECYCLE_HACK
+      struct GSourceCallback {
+        volatile gint ref_count;
+        GSourceFunc func;
+        gpointer    data;
+      } *cb = ((GSource*) src)->callback_data;
+      cb->func = callback;
+      cb->data = data;
+#else
+      g_source_set_callback((GSource*) src, callback, data, NULL);
+#endif
+      return G_SOURCE_CONTINUE;
+    }
+  }
+#endif
+  if (interval >= 1000)
+    *id = g_timeout_add_seconds(interval/1000, callback, data);
+  else
+    *id = g_timeout_add(interval, callback, data);
+
+  return G_SOURCE_REMOVE;
+}
 
 static Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
   for (GSList *l = applications; l; l = l->next)
@@ -90,7 +125,8 @@ void window_suspend(WnckWindow *win, int suspend_delay, int refresh_delay, int r
   app->refresh_duration = refresh_duration;
   app->state = STATE_IS_SUSPENDING;
   if (suspend_delay)
-    app->timeout_id = G_TIMEOUT_ADD(suspend_delay, suspend_callback, app);
+    g_timeout_add_recycled(&app->timeout_id,
+        suspend_delay, (GSourceFunc) suspend_callback, app);
   else
     suspend_callback(app);
 }
@@ -140,21 +176,19 @@ static gboolean suspend_callback(Application *app) {
   kill_wnck_application(app->wnck_app, SIGSTOP);
   app->state = STATE_SUSPENDED;
   if (app->refresh_delay)
-    app->timeout_id = G_TIMEOUT_ADD(app->refresh_delay, refresh_callback, app);
-  else
+    return g_timeout_add_recycled(&app->timeout_id,
+        app->refresh_delay, (GSourceFunc) refresh_callback, app);
+  else {
     app->timeout_id = 0;
-  return G_SOURCE_REMOVE;
+    return G_SOURCE_REMOVE;
+  }
 }
 
 static gboolean refresh_callback(Application *app) {
   log_debug("refresh_callback: %d\n", app->timeout_id);
   kill_wnck_application(app->wnck_app, SIGCONT);
-  if (app->refresh_duration > 1)
-    app->timeout_id = G_TIMEOUT_ADD(app->refresh_duration, suspend_callback, app);
-  else {
-    suspend_callback(app);
-  }
-  return G_SOURCE_REMOVE;
+  return g_timeout_add_recycled(&app->timeout_id,
+      app->refresh_duration, (GSourceFunc) suspend_callback, app);
 }
 
 /* ============================================================================
@@ -240,7 +274,9 @@ static void application_apply_rules(WnckApplication *app) {
 }
 
 /* Apply the configuration rules to all applications of the screen */
-static void screen_apply_rules() {
+static void screen_apply_rules(gpointer hook) {
+  window_hook = GPOINTER_TO_UINT(hook);
+  log_event("screen::%s\n", hook_to_str(window_hook));
   for (GSList *l = applications; l; l = l->next)
     application_apply_rules(((Application*) l->data)->wnck_app);
 }
@@ -268,10 +304,8 @@ static void on_window_state_changed(WnckWindow* window,
   /* If the window changed its `above` state we have to re-apply the configuration
    * to all windows on the screen, since the `above` state affects our logic
    * of calculating the stackposition. */
-  if (changed_mask & WNCK_WINDOW_STATE_ABOVE) {
-    window_hook = HOOK_WINDOW_STACKING_CHANGED;
-    screen_apply_rules();
-  }
+  if (changed_mask & WNCK_WINDOW_STATE_ABOVE)
+    screen_apply_rules(GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
 }
 
 static inline void window_connect_signals(WnckWindow *win) {
@@ -327,16 +361,6 @@ static void on_window_event(WnckScreen* _, WnckWindow* window, gpointer hook) {
   // Signal `window-stacking-changed` will call screen_apply_rules()
 }
 
-/* === Screen events ===
- * This callback function is to be used with `g_signal_connect_swapped()`,
- * since we are only interested in *which signal* triggered this function
- * and don't care about the specific arguments of an event. */
-static void on_screen_event(gpointer hook) {
-  window_hook = GPOINTER_TO_UINT(hook);
-  log_event("screen::%s\n", hook_to_str(window_hook));
-  screen_apply_rules();
-}
-
 int manager_init() {
   if (! (screen = wnck_screen_get_default()))
     return 0;
@@ -353,15 +377,15 @@ int manager_init() {
   g_signal_connect(screen, "window-closed",
       (GCallback) on_window_event, GUINT_TO_POINTER(HOOK_CLOSED));
 
-  // Screen events
+  // Screen
   g_signal_connect_swapped(screen, "window-stacking-changed",
-      (GCallback) on_screen_event, GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
+      (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
   //g_signal_connect_swapped(screen, "active-window-changed",
-  //    (GCallback) on_screen_event, GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
+  //    (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
   g_signal_connect_swapped(screen, "active-workspace-changed",
-      (GCallback) on_screen_event, GUINT_TO_POINTER(HOOK_ACTIVE_WORKSPACE_CHANGED));
+      (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_ACTIVE_WORKSPACE_CHANGED));
   g_signal_connect_swapped(screen, "showing-desktop-changed",
-      (GCallback) on_screen_event, GUINT_TO_POINTER(HOOK_SHOWING_DESKTOP_CHANGED));
+      (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_SHOWING_DESKTOP_CHANGED));
 
   return 1;
 }

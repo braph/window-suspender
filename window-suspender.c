@@ -20,11 +20,6 @@ Statement *config;
 Statement *parse_config(const char*); /* y.tab.c */
 static char* find_config_file();
 
-static gboolean on_quit(gpointer loop) {
-  g_main_loop_quit((GMainLoop*) loop);
-  return true;
-}
-
 int main(int argc, char *argv[]) {
   char *config_file = NULL;
   unsigned int foreground = 0;
@@ -74,24 +69,15 @@ OPT:
 
   gdk_init(&argc, &argv);
   GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-  g_unix_signal_add_full(0, SIGINT, &on_quit, loop, NULL);
-  g_unix_signal_add_full(0, SIGTERM, &on_quit, loop, NULL);
+  g_unix_signal_add(SIGINT, (GSourceFunc) g_main_loop_quit, loop);
+  g_unix_signal_add(SIGTERM, (GSourceFunc) g_main_loop_quit, loop);
   if (! manager_init()) {
     printerr("Failed. Is X11 running?\n");
     return 1;
   }
-  // TODO: Is this useful?
-  //wnck_set_default_icon_size(1);
-  //wnck_set_default_mini_icon_size(1);
   wnck_set_client_type(WNCK_CLIENT_TYPE_APPLICATION);
   g_main_loop_run(loop);
-  // TODO: Destroy the app in the right order
   restore_processes();
-  statement_free(config);
-  //wnck_shutdown();
-  //g_main_loop_unref(loop);
-  //g_source_remove(sigint);
-  //g_source_remove(sigterm);
   return 0;
 }
 

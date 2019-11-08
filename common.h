@@ -34,7 +34,14 @@ typedef enum {
   printerr(__VA_ARGS__); \
 } while(0)
 
-#define ARRAY_SIZE(A) (sizeof(A)/sizeof(*A))
+#define ARRAY_SIZE(A) \
+  (sizeof(A)/sizeof(*A))
+
+#define MEMBER_SIZE(TYPE, MEMBER) \
+  sizeof(((TYPE*)0)->MEMBER)
+
+#define CLASS_SIZE(BASE_STRUCT, KLASS_STRUCT) \
+  (offsetof(BASE_STRUCT, klass) + MEMBER_SIZE(BASE_STRUCT, klass.KLASS_STRUCT))
 
 typedef struct {
   void **data;

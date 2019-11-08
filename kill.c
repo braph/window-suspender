@@ -50,7 +50,8 @@ void process_rule_add(const char *name, GSList *subprocesses) {
  */
 static inline int get_ppid_and_name(const char *pid, char **name) {
   int fd, n, ppid;
-  char buf[128], *name_begin, *name_end, *ppid_begin;
+  static char buf[128];
+  char *name_begin, *name_end, *ppid_begin;
   sprintf(buf, PROC_FS "/%.16s/stat", pid);
   if ((fd = open(buf, O_RDONLY)) < 0)
     return 0;
@@ -64,7 +65,7 @@ static inline int get_ppid_and_name(const char *pid, char **name) {
   if (! (ppid_begin = strpbrk(name_end, "0123456789"))) return 0;
   if (! (ppid       = atoi(ppid_begin)))                return 0;
   *name_end = '\0';
-  return (*name = strdup(name_begin + 1)), ppid;
+  return (*name = name_begin + 1), ppid;
 }
 
 static void read_processes()
@@ -81,18 +82,21 @@ static void read_processes()
       if (process.pid < MINIMUM_PROCESS_ID)
         continue;
       process.ppid = get_ppid_and_name(file->d_name, &process.name);
-      if (!process.ppid)
+      if (process.ppid < MINIMUM_PROCESS_ID)
         continue;
+      process.name = strdup(process.name);
 
       if (processes_size == processes_allocated) {
         processes_allocated += 16;
         processes = realloc(processes, processes_allocated * sizeof(*processes));
       }
       processes[processes_size++] = process;
-      //log_debug("Added %5d PPID=%5d %s\n", process.pid, process.ppid, process.name);
     }
     closedir(dir);
   }
+
+  //for (unsigned int i = 0; i < processes_size; ++i)
+  //  printf("Process: %5d PPID=%5d [%s]\n", processes[i].pid, processes[i].ppid, processes[i].name);
 }
 
 void kill_children(int pid, int sig)
@@ -104,8 +108,8 @@ void kill_children(int pid, int sig)
   }
 
   struct proc *parent = NULL;
-  static PointerArray children = { 0 }; // Static, saves us allocates
-  children.size = 0; // Clear, but keep allocated memory
+  static PointerArray children = { 0 };
+  children.size = 0;
 
   for (unsigned int i = 0; i < processes_size; ++i)
     if (processes[i].ppid == pid)
