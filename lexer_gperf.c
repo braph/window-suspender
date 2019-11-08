@@ -1,6 +1,6 @@
 /* ANSI-C code produced by gperf version 3.1 */
-/* Command-line: gperf -m1000 config.gperf.c  */
-/* Computed positions: -k'3-4,$' */
+/* Command-line: gperf -m1000 -n config.gperf.c  */
+/* Computed positions: -k'3-4,7,15,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -55,9 +55,9 @@ struct __attribute__((packed)) token {
 #define TOTAL_KEYWORDS 82
 #define MIN_WORD_LENGTH 3
 #define MAX_WORD_LENGTH 24
-#define MIN_HASH_VALUE 5
-#define MAX_HASH_VALUE 133
-/* maximum key range = 129, duplicates = 0 */
+#define MIN_HASH_VALUE 0
+#define MAX_HASH_VALUE 129
+/* maximum key range = 130, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -71,38 +71,40 @@ hash (register const char *str, register size_t len)
 {
   static const unsigned char asso_values[] =
     {
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134,  63, 134,  23, 134,  26,
-        1,   0, 134,  12,   0,   5, 134,  37,  21,   9,
-        2,  55,  37, 134,  23,   1,   0,  13,   0,  24,
-       40,  19, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134, 134, 134, 134, 134,
-      134, 134, 134, 134, 134, 134
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130, 130, 130, 130, 130, 130,
+      130, 130, 130, 130, 130,  50, 130,   4,  11,  26,
+       17,   1,  18,  19,  49,   3, 130,  16,   7,   6,
+        0,  21,  24, 130,  11,   1,   0,  46,  15,  48,
+       15,  25,  16, 130, 130, 130, 130, 130
     };
-  register unsigned int hval = len;
+  register unsigned int hval = 0;
 
-  switch (hval)
+  switch (len)
     {
       default:
+        hval += asso_values[(unsigned char)str[14]];
+      /*FALLTHROUGH*/
+      case 14:
+      case 13:
+      case 12:
+      case 11:
+      case 10:
+      case 9:
+      case 8:
+      case 7:
+        hval += asso_values[(unsigned char)str[6]];
+      /*FALLTHROUGH*/
+      case 6:
+      case 5:
+      case 4:
         hval += asso_values[(unsigned char)str[3]];
       /*FALLTHROUGH*/
       case 3:
@@ -117,185 +119,185 @@ in_word_set (register const char *str, register size_t len)
 {
   static const struct __attribute__((packed)) token wordlist[] =
     {
-      {""}, {""}, {""}, {""}, {""},
-#line 102 "config.gperf.c"
-      {"has",                       T(HAS                     , 0)},
-      {""},
-#line 48 "config.gperf.c"
-      {"pin",                       T(ACTION_TYPE , STATEMENT_PIN)},
-#line 35 "config.gperf.c"
-      {"unshade",                   T(ACTION_TYPE , STATEMENT_UNSHADE)},
-#line 52 "config.gperf.c"
-      {"opened",                    T(HOOK_TYPE , HOOK_OPENED)},
-#line 70 "config.gperf.c"
-      {"hidden",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_HIDDEN)},
-#line 103 "config.gperf.c"
-      {"contains",                  T(CONTAINS                , 0)},
-#line 96 "config.gperf.c"
-      {"print",                     T(PRINT                   , 0)},
-#line 50 "config.gperf.c"
-      {"activate",                  T(ACTION_TYPE , STATEMENT_ACTIVATE)},
-      {""},
-#line 26 "config.gperf.c"
-      {"minimize",                  T(ACTION_TYPE , STATEMENT_MINIMIZE)},
-#line 97 "config.gperf.c"
-      {"system",                    T(SYSTEM                  , 0)},
-#line 64 "config.gperf.c"
-      {"minimized",                 T(WINDOW_STATE , WNCK_WINDOW_STATE_MINIMIZED)},
-      {""},
-#line 47 "config.gperf.c"
-      {"unset_fullscreen",          T(ACTION_TYPE , STATEMENT_UNSET_FULLSCREEN)},
-#line 45 "config.gperf.c"
-      {"unset_skip_tasklist",       T(ACTION_TYPE , STATEMENT_UNSET_SKIP_TASKLIST)},
-#line 98 "config.gperf.c"
-      {"return",                    T(RETURN                  , 0)},
-#line 55 "config.gperf.c"
-      {"name_changed",              T(HOOK_TYPE , HOOK_NAME_CHANGED)},
-#line 51 "config.gperf.c"
-      {"activate_transient",        T(ACTION_TYPE , STATEMENT_ACTIVATE_TRANSIENT)},
-#line 27 "config.gperf.c"
-      {"unminimize",                T(ACTION_TYPE , STATEMENT_UNMINIMIZE)},
-#line 89 "config.gperf.c"
-      {"role",                      T(WINDOW_FIELD , WINDOW_ROLE)},
-#line 85 "config.gperf.c"
-      {"title",                     T(WINDOW_FIELD , WINDOW_TITLE)},
-#line 61 "config.gperf.c"
-      {"window_stacking_changed",   T(HOOK_TYPE , HOOK_WINDOW_STACKING_CHANGED)},
-#line 94 "config.gperf.c"
-      {"state",                     T(COND_STATE              , 0)},
-#line 34 "config.gperf.c"
-      {"shade",                     T(ACTION_TYPE , STATEMENT_SHADE)},
-#line 62 "config.gperf.c"
-      {"active_workspace_changed",  T(HOOK_TYPE , HOOK_ACTIVE_WORKSPACE_CHANGED)},
-#line 67 "config.gperf.c"
-      {"shaded",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_SHADED)},
-#line 80 "config.gperf.c"
-      {"menu",                      T(WINDOW_TYPE ,  WNCK_WINDOW_MENU)},
-#line 87 "config.gperf.c"
-      {"classname",                 T(WINDOW_FIELD , WINDOW_CLASS)},
-#line 56 "config.gperf.c"
-      {"role_changed",              T(HOOK_TYPE , HOOK_ROLE_CHANGED)},
-      {""},
-#line 101 "config.gperf.c"
-      {"children",                  T(CHILDREN                , 0)},
-#line 60 "config.gperf.c"
-      {"state_changed",             T(HOOK_TYPE , HOOK_STATE_CHANGED)},
-#line 54 "config.gperf.c"
-      {"class_changed",             T(HOOK_TYPE , HOOK_CLASS_CHANGED)},
-      {""},
-#line 43 "config.gperf.c"
-      {"unset_skip_pager",          T(ACTION_TYPE , STATEMENT_UNSET_SKIP_PAGER)},
-#line 92 "config.gperf.c"
-      {"type",                      T(COND_TYPE               , 0)},
-#line 29 "config.gperf.c"
-      {"unmaximize",                T(ACTION_TYPE , STATEMENT_UNMAXIMIZE)},
-#line 106 "config.gperf.c"
-      {"--refresh-duration",        T(OPTION_REFRESH_DURATION , 0)},
-#line 37 "config.gperf.c"
-      {"unmake_above",              T(ACTION_TYPE , STATEMENT_UNMAKE_ABOVE)},
-#line 41 "config.gperf.c"
-      {"unstick",                   T(ACTION_TYPE , STATEMENT_UNSTICK)},
-#line 99 "config.gperf.c"
-      {"suspend",                   T(SUSPEND                 , 0)},
-#line 36 "config.gperf.c"
-      {"make_above",                T(ACTION_TYPE , STATEMENT_MAKE_ABOVE)},
-#line 104 "config.gperf.c"
-      {"--suspend-delay",           T(OPTION_SUSPEND_DELAY    , 0)},
 #line 49 "config.gperf.c"
-      {"unpin",                     T(ACTION_TYPE , STATEMENT_UNPIN)},
-#line 57 "config.gperf.c"
-      {"type_changed",              T(HOOK_TYPE , HOOK_TYPE_CHANGED)},
-#line 72 "config.gperf.c"
-      {"demands_attention",         T(WINDOW_STATE , WNCK_WINDOW_STATE_DEMANDS_ATTENTION)},
-#line 84 "config.gperf.c"
-      {"utility",                   T(WINDOW_TYPE ,  WNCK_WINDOW_UTILITY)},
-#line 28 "config.gperf.c"
-      {"maximize",                  T(ACTION_TYPE , STATEMENT_MAXIMIZE)},
-#line 71 "config.gperf.c"
-      {"fullscreen",                T(WINDOW_STATE , WNCK_WINDOW_STATE_FULLSCREEN)},
-#line 69 "config.gperf.c"
-      {"skip_tasklist",             T(WINDOW_STATE , WNCK_WINDOW_STATE_SKIP_TASKLIST)},
-#line 76 "config.gperf.c"
-      {"sticky",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_STICKY)},
-#line 105 "config.gperf.c"
-      {"--refresh-delay",           T(OPTION_REFRESH_DELAY    , 0)},
-#line 82 "config.gperf.c"
-      {"splashscreen",              T(WINDOW_TYPE ,  WNCK_WINDOW_SPLASHSCREEN)},
-#line 81 "config.gperf.c"
-      {"normal",                    T(WINDOW_TYPE ,  WNCK_WINDOW_NORMAL)},
-#line 73 "config.gperf.c"
-      {"above",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_ABOVE)},
-#line 25 "config.gperf.c"
-      {"close",                     T(ACTION_TYPE , STATEMENT_CLOSE)},
-#line 78 "config.gperf.c"
-      {"dialog",                    T(WINDOW_TYPE ,  WNCK_WINDOW_DIALOG)},
-#line 53 "config.gperf.c"
-      {"closed",                    T(HOOK_TYPE , HOOK_CLOSED)},
-#line 93 "config.gperf.c"
-      {"stackposition",             T(COND_STACKPOSITION      , 0)},
-#line 88 "config.gperf.c"
-      {"iconname",                  T(WINDOW_FIELD , WINDOW_ICON_NAME)},
-      {""},
-#line 75 "config.gperf.c"
-      {"inactive_workspace",        T(WINDOW_STATE , WNCK_WINDOW_STATE_INACTIVE_WORKSPACE)},
-#line 39 "config.gperf.c"
-      {"unmake_below",              T(ACTION_TYPE , STATEMENT_UNMAKE_BELOW)},
-#line 90 "config.gperf.c"
-      {"workspace",                 T(WINDOW_FIELD , WINDOW_WORKSPACE)},
-#line 58 "config.gperf.c"
-      {"icon_changed",              T(HOOK_TYPE , HOOK_ICON_CHANGED)},
-#line 38 "config.gperf.c"
-      {"make_below",                T(ACTION_TYPE , STATEMENT_MAKE_BELOW)},
-#line 33 "config.gperf.c"
-      {"unmaximize_vertically",     T(ACTION_TYPE , STATEMENT_UNMAXIMIZE_VERTICALLY)},
-#line 40 "config.gperf.c"
-      {"stick",                     T(ACTION_TYPE , STATEMENT_STICK)},
-#line 31 "config.gperf.c"
-      {"unmaximize_horizontally",   T(ACTION_TYPE , STATEMENT_UNMAXIMIZE_HORIZONTALLY)},
-#line 68 "config.gperf.c"
-      {"skip_pager",                T(WINDOW_STATE , WNCK_WINDOW_STATE_SKIP_PAGER)},
-      {""},
-#line 86 "config.gperf.c"
-      {"groupname",                 T(WINDOW_FIELD , WINDOW_GROUP)},
-#line 59 "config.gperf.c"
-      {"workspace_changed",         T(HOOK_TYPE , HOOK_WORKSPACE_CHANGED)},
-#line 46 "config.gperf.c"
-      {"set_fullscreen",            T(ACTION_TYPE , STATEMENT_SET_FULLSCREEN)},
-#line 44 "config.gperf.c"
-      {"set_skip_tasklist",         T(ACTION_TYPE , STATEMENT_SET_SKIP_TASKLIST)},
-      {""},
-#line 77 "config.gperf.c"
-      {"desktop",                   T(WINDOW_TYPE ,  WNCK_WINDOW_DESKTOP)},
-#line 32 "config.gperf.c"
-      {"maximize_vertically",       T(ACTION_TYPE , STATEMENT_MAXIMIZE_VERTICALLY)},
-#line 66 "config.gperf.c"
-      {"maximized_vertically",      T(WINDOW_STATE , WNCK_WINDOW_STATE_MAXIMIZED_VERTICALLY)},
-#line 30 "config.gperf.c"
-      {"maximize_horizontally",     T(ACTION_TYPE , STATEMENT_MAXIMIZE_HORIZONTALLY)},
-#line 65 "config.gperf.c"
-      {"maximized_horizontally",    T(WINDOW_STATE , WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY)},
-      {""}, {""},
-#line 100 "config.gperf.c"
-      {"process",                   T(PROCESS                 , 0)},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 91 "config.gperf.c"
-      {"workspace_number",          T(COND_WORKSPACE_NUMBER   , 0)},
-#line 42 "config.gperf.c"
-      {"set_skip_pager",            T(ACTION_TYPE , STATEMENT_SET_SKIP_PAGER)},
-      {""}, {""},
-#line 63 "config.gperf.c"
-      {"showing_desktop_changed",   T(HOOK_TYPE , HOOK_SHOWING_DESKTOP_CHANGED)},
-#line 79 "config.gperf.c"
-      {"dock",                      T(WINDOW_TYPE ,  WNCK_WINDOW_DOCK)},
-#line 74 "config.gperf.c"
-      {"below",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_BELOW)},
-#line 83 "config.gperf.c"
-      {"toolbar",                   T(WINDOW_TYPE ,  WNCK_WINDOW_TOOLBAR)},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {"pin",                       T(ACTION_TYPE , STATEMENT_PIN)},
+#line 104 "config.gperf.c"
+      {"contains",                  T(CONTAINS                , 0)},
+#line 103 "config.gperf.c"
+      {"has",                       T(HAS                     , 0)},
+#line 97 "config.gperf.c"
+      {"print",                     T(PRINT                   , 0)},
+#line 51 "config.gperf.c"
+      {"activate",                  T(ACTION_TYPE , STATEMENT_ACTIVATE)},
 #line 95 "config.gperf.c"
-      {"hook",                      T(COND_HOOK               , 0)}
+      {"state",                     T(COND_STATE              , 0)},
+#line 52 "config.gperf.c"
+      {"activate_transient",        T(ACTION_TYPE , STATEMENT_ACTIVATE_TRANSIENT)},
+#line 98 "config.gperf.c"
+      {"system",                    T(SYSTEM                  , 0)},
+#line 86 "config.gperf.c"
+      {"title",                     T(WINDOW_FIELD , WINDOW_TITLE)},
+#line 90 "config.gperf.c"
+      {"role",                      T(WINDOW_FIELD , WINDOW_ROLE)},
+#line 88 "config.gperf.c"
+      {"classname",                 T(WINDOW_FIELD , WINDOW_CLASS)},
+#line 102 "config.gperf.c"
+      {"children",                  T(CHILDREN                , 0)},
+#line 83 "config.gperf.c"
+      {"splashscreen",              T(WINDOW_TYPE ,  WNCK_WINDOW_SPLASHSCREEN)},
+#line 107 "config.gperf.c"
+      {"--refresh-duration",        T(OPTION_REFRESH_DURATION , 0)},
+#line 73 "config.gperf.c"
+      {"demands_attention",         T(WINDOW_STATE , WNCK_WINDOW_STATE_DEMANDS_ATTENTION)},
+#line 44 "config.gperf.c"
+      {"unset_skip_pager",          T(ACTION_TYPE , STATEMENT_UNSET_SKIP_PAGER)},
+#line 28 "config.gperf.c"
+      {"unminimize",                T(ACTION_TYPE , STATEMENT_UNMINIMIZE)},
+#line 30 "config.gperf.c"
+      {"unmaximize",                T(ACTION_TYPE , STATEMENT_UNMAXIMIZE)},
+#line 53 "config.gperf.c"
+      {"opened",                    T(HOOK_TYPE , HOOK_OPENED)},
+#line 46 "config.gperf.c"
+      {"unset_skip_tasklist",       T(ACTION_TYPE , STATEMENT_UNSET_SKIP_TASKLIST)},
+#line 27 "config.gperf.c"
+      {"minimize",                  T(ACTION_TYPE , STATEMENT_MINIMIZE)},
+#line 48 "config.gperf.c"
+      {"unset_fullscreen",          T(ACTION_TYPE , STATEMENT_UNSET_FULLSCREEN)},
+#line 35 "config.gperf.c"
+      {"shade",                     T(ACTION_TYPE , STATEMENT_SHADE)},
+#line 26 "config.gperf.c"
+      {"close",                     T(ACTION_TYPE , STATEMENT_CLOSE)},
+#line 82 "config.gperf.c"
+      {"normal",                    T(WINDOW_TYPE ,  WNCK_WINDOW_NORMAL)},
+#line 72 "config.gperf.c"
+      {"fullscreen",                T(WINDOW_STATE , WNCK_WINDOW_STATE_FULLSCREEN)},
+#line 93 "config.gperf.c"
+      {"type",                      T(COND_TYPE               , 0)},
+#line 50 "config.gperf.c"
+      {"unpin",                     T(ACTION_TYPE , STATEMENT_UNPIN)},
+#line 89 "config.gperf.c"
+      {"iconname",                  T(WINDOW_FIELD , WINDOW_ICON_NAME)},
+#line 37 "config.gperf.c"
+      {"make_above",                T(ACTION_TYPE , STATEMENT_MAKE_ABOVE)},
+#line 79 "config.gperf.c"
+      {"dialog",                    T(WINDOW_TYPE ,  WNCK_WINDOW_DIALOG)},
+#line 70 "config.gperf.c"
+      {"skip_tasklist",             T(WINDOW_STATE , WNCK_WINDOW_STATE_SKIP_TASKLIST)},
+#line 91 "config.gperf.c"
+      {"workspace",                 T(WINDOW_FIELD , WINDOW_WORKSPACE)},
+#line 42 "config.gperf.c"
+      {"unstick",                   T(ACTION_TYPE , STATEMENT_UNSTICK)},
+#line 71 "config.gperf.c"
+      {"hidden",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_HIDDEN)},
+#line 29 "config.gperf.c"
+      {"maximize",                  T(ACTION_TYPE , STATEMENT_MAXIMIZE)},
+#line 65 "config.gperf.c"
+      {"minimized",                 T(WINDOW_STATE , WNCK_WINDOW_STATE_MINIMIZED)},
+#line 74 "config.gperf.c"
+      {"above",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_ABOVE)},
+#line 68 "config.gperf.c"
+      {"shaded",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_SHADED)},
+#line 54 "config.gperf.c"
+      {"closed",                    T(HOOK_TYPE , HOOK_CLOSED)},
+      {""},
+#line 34 "config.gperf.c"
+      {"unmaximize_vertically",     T(ACTION_TYPE , STATEMENT_UNMAXIMIZE_VERTICALLY)},
+#line 69 "config.gperf.c"
+      {"skip_pager",                T(WINDOW_STATE , WNCK_WINDOW_STATE_SKIP_PAGER)},
+#line 92 "config.gperf.c"
+      {"workspace_number",          T(COND_WORKSPACE_NUMBER   , 0)},
+#line 32 "config.gperf.c"
+      {"unmaximize_horizontally",   T(ACTION_TYPE , STATEMENT_UNMAXIMIZE_HORIZONTALLY)},
+#line 41 "config.gperf.c"
+      {"stick",                     T(ACTION_TYPE , STATEMENT_STICK)},
+#line 99 "config.gperf.c"
+      {"return",                    T(RETURN                  , 0)},
+#line 61 "config.gperf.c"
+      {"state_changed",             T(HOOK_TYPE , HOOK_STATE_CHANGED)},
+#line 55 "config.gperf.c"
+      {"class_changed",             T(HOOK_TYPE , HOOK_CLASS_CHANGED)},
+#line 101 "config.gperf.c"
+      {"process",                   T(PROCESS                 , 0)},
+#line 84 "config.gperf.c"
+      {"toolbar",                   T(WINDOW_TYPE ,  WNCK_WINDOW_TOOLBAR)},
+#line 94 "config.gperf.c"
+      {"stackposition",             T(COND_STACKPOSITION      , 0)},
+#line 36 "config.gperf.c"
+      {"unshade",                   T(ACTION_TYPE , STATEMENT_UNSHADE)},
+#line 96 "config.gperf.c"
+      {"hook",                      T(COND_HOOK               , 0)},
+#line 77 "config.gperf.c"
+      {"sticky",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_STICKY)},
+      {""},
+#line 45 "config.gperf.c"
+      {"set_skip_tasklist",         T(ACTION_TYPE , STATEMENT_SET_SKIP_TASKLIST)},
+#line 47 "config.gperf.c"
+      {"set_fullscreen",            T(ACTION_TYPE , STATEMENT_SET_FULLSCREEN)},
+#line 80 "config.gperf.c"
+      {"dock",                      T(WINDOW_TYPE ,  WNCK_WINDOW_DOCK)},
+#line 100 "config.gperf.c"
+      {"suspend",                   T(SUSPEND                 , 0)},
+#line 85 "config.gperf.c"
+      {"utility",                   T(WINDOW_TYPE ,  WNCK_WINDOW_UTILITY)},
+#line 38 "config.gperf.c"
+      {"unmake_above",              T(ACTION_TYPE , STATEMENT_UNMAKE_ABOVE)},
+#line 67 "config.gperf.c"
+      {"maximized_vertically",      T(WINDOW_STATE , WNCK_WINDOW_STATE_MAXIMIZED_VERTICALLY)},
+#line 106 "config.gperf.c"
+      {"--refresh-delay",           T(OPTION_REFRESH_DELAY    , 0)},
+#line 43 "config.gperf.c"
+      {"set_skip_pager",            T(ACTION_TYPE , STATEMENT_SET_SKIP_PAGER)},
+#line 78 "config.gperf.c"
+      {"desktop",                   T(WINDOW_TYPE ,  WNCK_WINDOW_DESKTOP)},
+#line 39 "config.gperf.c"
+      {"make_below",                T(ACTION_TYPE , STATEMENT_MAKE_BELOW)},
+#line 60 "config.gperf.c"
+      {"workspace_changed",         T(HOOK_TYPE , HOOK_WORKSPACE_CHANGED)},
+      {""}, {""},
+#line 76 "config.gperf.c"
+      {"inactive_workspace",        T(WINDOW_STATE , WNCK_WINDOW_STATE_INACTIVE_WORKSPACE)},
+      {""},
+#line 87 "config.gperf.c"
+      {"groupname",                 T(WINDOW_FIELD , WINDOW_GROUP)},
+#line 56 "config.gperf.c"
+      {"name_changed",              T(HOOK_TYPE , HOOK_NAME_CHANGED)},
+#line 57 "config.gperf.c"
+      {"role_changed",              T(HOOK_TYPE , HOOK_ROLE_CHANGED)},
+#line 66 "config.gperf.c"
+      {"maximized_horizontally",    T(WINDOW_STATE , WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY)},
+#line 75 "config.gperf.c"
+      {"below",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_BELOW)},
+      {""}, {""}, {""},
+#line 31 "config.gperf.c"
+      {"maximize_horizontally",     T(ACTION_TYPE , STATEMENT_MAXIMIZE_HORIZONTALLY)},
+      {""}, {""}, {""}, {""},
+#line 33 "config.gperf.c"
+      {"maximize_vertically",       T(ACTION_TYPE , STATEMENT_MAXIMIZE_VERTICALLY)},
+      {""},
+#line 59 "config.gperf.c"
+      {"icon_changed",              T(HOOK_TYPE , HOOK_ICON_CHANGED)},
+      {""}, {""}, {""},
+#line 58 "config.gperf.c"
+      {"type_changed",              T(HOOK_TYPE , HOOK_TYPE_CHANGED)},
+#line 81 "config.gperf.c"
+      {"menu",                      T(WINDOW_TYPE ,  WNCK_WINDOW_MENU)},
+      {""}, {""}, {""},
+#line 63 "config.gperf.c"
+      {"active_workspace_changed",  T(HOOK_TYPE , HOOK_ACTIVE_WORKSPACE_CHANGED)},
+      {""},
+#line 105 "config.gperf.c"
+      {"--suspend-delay",           T(OPTION_SUSPEND_DELAY    , 0)},
+      {""}, {""}, {""}, {""},
+#line 62 "config.gperf.c"
+      {"window_stacking_changed",   T(HOOK_TYPE , HOOK_WINDOW_STACKING_CHANGED)},
+      {""}, {""}, {""}, {""},
+#line 40 "config.gperf.c"
+      {"unmake_below",              T(ACTION_TYPE , STATEMENT_UNMAKE_BELOW)},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 64 "config.gperf.c"
+      {"showing_desktop_changed",   T(HOOK_TYPE , HOOK_SHOWING_DESKTOP_CHANGED)}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -312,7 +314,7 @@ in_word_set (register const char *str, register size_t len)
     }
   return 0;
 }
-#line 107 "config.gperf.c"
+#line 108 "config.gperf.c"
 
 
 #define LEX_ERROR '\1' // TODO: What does yylex() really return on error?
@@ -383,8 +385,7 @@ NEXT:
 WAIT_FOR_TERMINATING_SLASH:
           switch ((c = GETC())) {
             case '*': goto WAIT_FOR_TERMINATING_SLASH;
-            case '/': goto NEXT;
-          }
+            case '/': goto NEXT; }
 
       printerr("Warning: EOF reached while scanning /* */ comment\n");
       return EOF;
@@ -424,7 +425,7 @@ WAIT_FOR_TERMINATING_SLASH:
       for (;;)
         switch ((c = GETC())) {
           case EOF:  printerr("Warning: EOF reached while scanning double quoted string\n");
-          case '"': return yytext_finalize(), yylval.string = strdup(yytext), STRING;
+          case '"':  return yytext_finalize(), yylval.string = strdup(yytext), STRING;
           default:   yytext_append(c); }
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':

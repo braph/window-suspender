@@ -78,12 +78,11 @@ Statement* parse_config(const char *file) {
 %type <comparison> numeric_comparison
 %type <string_list> string_list
 
-%start config
-
-%left AND_AND
+%right AND_AND
 %right OR_OR
-%left NOT
+%right NOT
 
+%start config
 %%
 
 config
@@ -112,14 +111,17 @@ numeric_comparison
 
 condition
     : WINDOW_FIELD EQUAL STRING       { $$ = conditional_string_match_new($1, $3);         free($3); }
-    | WINDOW_FIELD REGEX_EQUAL STRING { $$ = conditional_regex_match_new($1, $3);          free($3); }
     | WINDOW_FIELD UNEQUAL STRING     { $$ = C_NOT(conditional_string_match_new($1, $3));  free($3); }
+    | WINDOW_FIELD REGEX_EQUAL STRING   { $$ = conditional_regex_match_new($1, $3);        free($3); }
     | WINDOW_FIELD REGEX_UNEQUAL STRING { $$ = C_NOT(conditional_regex_match_new($1, $3)); free($3); }
     | WINDOW_FIELD CONTAINS STRING    { $$ = conditional_string_contains_new($1, $3);      free($3); }
     | SYSTEM STRING                   { $$ = conditional_system_new($2);                   free($2); }
-    | COND_TYPE EQUAL WINDOW_TYPE     { $$ = conditional_windowtype_new($3);  }
-    | COND_STATE EQUAL WINDOW_STATE   { $$ = conditional_windowstate_new($3); }
-    | COND_HOOK EQUAL HOOK_TYPE       { $$ = conditional_hook_new($3);        }
+    | COND_TYPE EQUAL WINDOW_TYPE     { $$ = conditional_windowtype_new($3);         }
+    | COND_TYPE UNEQUAL WINDOW_TYPE   { $$ = C_NOT(conditional_windowtype_new($3));  }
+    | COND_HOOK EQUAL HOOK_TYPE       { $$ = conditional_hook_new($3);               }
+    | COND_HOOK UNEQUAL HOOK_TYPE     { $$ = C_NOT(conditional_hook_new($3));        }
+    | COND_STATE EQUAL WINDOW_STATE   { $$ = conditional_windowstate_new($3);        }
+    | COND_STATE UNEQUAL WINDOW_STATE { $$ = C_NOT(conditional_windowstate_new($3)); }
     | COND_STACKPOSITION numeric_comparison NUMBER { $$ = conditional_stackposition_new($2, $3); }
     | COND_WORKSPACE_NUMBER numeric_comparison NUMBER { $$ = conditional_workspace_number_new($2, $3); }
     | condition AND_AND condition     { $$ = conditional_logic_and_new($1, $3); }

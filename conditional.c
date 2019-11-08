@@ -224,6 +224,7 @@ const char* hook_to_str(hook_type hook) {
     case HOOK_WINDOW_STACKING_CHANGED:  return "window_stacking_changed";
     case HOOK_ACTIVE_WORKSPACE_CHANGED: return "active_workspace_changed";
     case HOOK_SHOWING_DESKTOP_CHANGED:  return "showing_desktop_changed";
+    case HOOK_ACTIVE_WINDOW_CHANGED:    return "active_window_changed";
     default:                            return NULL;
   }
 }

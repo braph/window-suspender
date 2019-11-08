@@ -82,7 +82,7 @@ static void read_processes()
       if (process.pid < MINIMUM_PROCESS_ID)
         continue;
       process.ppid = get_ppid_and_name(file->d_name, &process.name);
-      if (process.ppid < MINIMUM_PROCESS_ID)
+      if (process.ppid < 1)
         continue;
       process.name = strdup(process.name);
 

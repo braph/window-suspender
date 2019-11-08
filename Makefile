@@ -29,7 +29,7 @@ lexer_lex.c: y.tab.h
 
 # Use our hand written lexer (gperf is needed to build the hash table)
 lexer_gperf.c: y.tab.h
-	gperf -m1000 config.gperf.c > lexer_gperf.c
+	gperf -m1000 -n config.gperf.c > lexer_gperf.c
 
 objs/%.o: %.c common.h actions.gen.h
 	@mkdir -p objs

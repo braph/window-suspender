@@ -42,6 +42,11 @@ OPT:
     default: return 1;
   }
 
+  if (optind != argc) {
+    printerr("Too many arguments\n");
+    return 1;
+  }
+
   if (config_file)
     config = parse_config(config_file);
   else if ((config_file = find_config_file())) {
@@ -61,8 +66,7 @@ OPT:
 
   if (! foreground)
     switch (fork()) {
-      case -1: perror("fork()");
-               return 1;
+      case -1: return perror("fork()"), 1;
       case 0:  break;
       default: return 0;
     }
@@ -75,7 +79,7 @@ OPT:
     printerr("Failed. Is X11 running?\n");
     return 1;
   }
-  wnck_set_client_type(WNCK_CLIENT_TYPE_APPLICATION);
+  //wnck_set_client_type(WNCK_CLIENT_TYPE_APPLICATION);
   g_main_loop_run(loop);
   restore_processes();
   return 0;

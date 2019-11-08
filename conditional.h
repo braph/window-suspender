@@ -52,6 +52,7 @@ typedef enum {
   HOOK_WINDOW_STACKING_CHANGED,
   HOOK_ACTIVE_WORKSPACE_CHANGED,
   HOOK_SHOWING_DESKTOP_CHANGED,
+  HOOK_ACTIVE_WINDOW_CHANGED,
 } hook_type;
 
 // This variable is updated by manager.c and holds information

@@ -1,32 +1,26 @@
 # vim: filetype=sh
 
-(system 'echo PASSED');
+system 'echo TEST 1';
+(system 'echo TEST 1 PASSED');
 
-return;
-
-print 'TEST';
+print 'TEST 2';
 (
-  (system '! false && true')
+  !(system 'false && true')
   &&
-  (!system 'false' && system 'true')
-)
-print 'PASSED';
-
-print 'TEST';
-(
-  (system 'echo PASSED || echo FAILED && echo PASSED')
-  &&
-  (system 'echo PASSED' || system 'echo FAILED' && system 'echo PASSED')
-)
-print 'PASSED';
-
-print 'TEST';
-((system 'true') && (system 'true')) {
-  print 'PASSED';
+  !(system 'false' && system 'true')
+) {
+  print 'TEST 2 PASSED';
 }
-print 'TEST';
 
-system 'echo TEST:';
+print 'TEST 3';
+(
+  !(system '(false || true && false)')
+  &&
+  !(system 'false' || system 'true' && system 'false')
+) {
+  print 'TEST 3 PASSED';
+}
+
 return;
 
 # =============================================================================
@@ -41,6 +35,6 @@ return;
 }
 
 (!title == 'bar' && !title == 'baz') {
-return;
+  return;
 }
 

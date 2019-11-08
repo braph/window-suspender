@@ -353,11 +353,9 @@ static void on_application_event(WnckScreen* _, WnckApplication* wnck_app, gpoin
 
 /* === Window opened / Window closed === */
 static void on_window_event(WnckScreen* _, WnckWindow* window, gpointer hook) {
-  window_hook = GPOINTER_TO_UINT(hook);
-  log_event("screen::%s: %s\n", hook_to_str(window_hook), windump(window));
-  if (window_hook == HOOK_OPENED)
+  if (GPOINTER_TO_UINT(window_hook) == HOOK_OPENED)
     window_connect_signals(window);
-  window_apply_rules(window, NULL);
+  on_win_signal(window, hook);
   // Signal `window-stacking-changed` will call screen_apply_rules()
 }
 
@@ -380,8 +378,8 @@ int manager_init() {
   // Screen
   g_signal_connect_swapped(screen, "window-stacking-changed",
       (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
-  //g_signal_connect_swapped(screen, "active-window-changed",
-  //    (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_WINDOW_STACKING_CHANGED));
+  g_signal_connect_swapped(screen, "active-window-changed",
+      (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_ACTIVE_WINDOW_CHANGED));
   g_signal_connect_swapped(screen, "active-workspace-changed",
       (GCallback) screen_apply_rules, GUINT_TO_POINTER(HOOK_ACTIVE_WORKSPACE_CHANGED));
   g_signal_connect_swapped(screen, "showing-desktop-changed",

@@ -19,6 +19,7 @@ struct __attribute__((packed)) token {
 
 %struct-type
 %readonly-tables
+%7bit
 
 // STRING,                   T(TOKEN       , YYLVAL)
 %%
@@ -174,8 +175,7 @@ NEXT:
 WAIT_FOR_TERMINATING_SLASH:
           switch ((c = GETC())) {
             case '*': goto WAIT_FOR_TERMINATING_SLASH;
-            case '/': goto NEXT;
-          }
+            case '/': goto NEXT; }
 
       printerr("Warning: EOF reached while scanning /* */ comment\n");
       return EOF;
@@ -215,7 +215,7 @@ WAIT_FOR_TERMINATING_SLASH:
       for (;;)
         switch ((c = GETC())) {
           case EOF:  printerr("Warning: EOF reached while scanning double quoted string\n");
-          case '"': return yytext_finalize(), yylval.string = strdup(yytext), STRING;
+          case '"':  return yytext_finalize(), yylval.string = strdup(yytext), STRING;
           default:   yytext_append(c); }
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
