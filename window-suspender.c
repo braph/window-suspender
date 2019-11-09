@@ -9,7 +9,7 @@
 #include "statement.h"
 
 #define USAGE \
-  "Usage: %s [-v] [-c CONFIG]\n" \
+  "Usage: %s [-vf] [-c CONFIG]\n" \
   "Suspend windows according to configured rules\n" \
   "-f   Run program in foreground\n" \
   "-v   Log verbose\n" \
@@ -22,10 +22,11 @@ static char* find_config_file();
 
 int main(int argc, char **argv) {
   char *config_file = NULL;
-  unsigned int foreground = 0;
+  bool foreground = 0;
 
 OPT:
   switch (getopt(argc, argv, "hvfc:")) {
+    default:  return 1;
     case 'c': config_file = optarg;
               goto OPT;
     case 'f': foreground = 1;
@@ -34,25 +35,17 @@ OPT:
               goto OPT;
     case 'h': printf(USAGE, *argv);
               return 0;
-    case -1:  break;
-    default:  return 1;
-  }
-
-  if (optind != argc) {
-    printerr("Too many arguments\n");
-    return 1;
+    case -1:  if (optind != argc)
+                return printerr("Too many arguments\n"), 1;
   }
 
   if (config_file)
     config = parse_config(config_file);
-  else if ((config_file = find_config_file())) {
-    config = parse_config(config_file);
+  else if ((config_file = find_config_file()))
+    config = parse_config(config_file),
     free(config_file);
-  }
-  else {
-    printerr("No configuration file found. Exiting\n");
-    return 1;
-  }
+  else
+    return printerr("No configuration file found. Exiting\n"), 1;
 
   if (! config)
     return 1;
@@ -68,54 +61,51 @@ OPT:
     }
 
   gdk_init(&argc, &argv);
-  GMainLoop *loop = g_main_loop_new(NULL, FALSE);
-  g_unix_signal_add(SIGINT, (GSourceFunc) g_main_loop_quit, loop);
-  g_unix_signal_add(SIGTERM, (GSourceFunc) g_main_loop_quit, loop);
-  if (! manager_init()) {
-    printerr("Failed. Is X11 running?\n");
-    return 1;
-  }
-  //wnck_set_client_type(WNCK_CLIENT_TYPE_APPLICATION);
-  g_main_loop_run(loop);
+  GMainLoop *l = g_main_loop_new(NULL, FALSE);
+  g_unix_signal_add(SIGINT, (GSourceFunc) g_main_loop_quit, l);
+  g_unix_signal_add(SIGTERM, (GSourceFunc) g_main_loop_quit, l);
+  if (! manager_init())
+    return printerr("Failed. Is X11 running?\n"), 1;
+  wnck_set_client_type(WNCK_CLIENT_TYPE_APPLICATION);
+  g_main_loop_run(l);
   restore_processes();
   return 0;
 }
 
 #define CONFIG_FILE "window-suspender.rc"
 char* find_config_file() {
-  const int size = 4096;
-	char *file = malloc(size);
-	const char *home;
+  char file[4096];
+  const char *home;
 
-  snprintf(file, size, "./" CONFIG_FILE);
-  if (! access(file, F_OK))
-    return file;
+  if (!access("./" CONFIG_FILE, F_OK))
+    return strdup("./" CONFIG_FILE);
 
-	home = getenv("XDG_CONFIG_HOME");
-	if (home && *home) {
-		snprintf(file, size, "%s/" CONFIG_FILE, home);
-		if (! access(file, F_OK))
-      return file;
-	}
+  home = getenv("XDG_CONFIG_HOME");
+  if (home && *home) {
+    snprintf(file, sizeof(file), "%s/" CONFIG_FILE, home);
+    if (!access(file, F_OK))
+      goto found;
+  }
 
-	home = getenv("HOME");
-	if (!home || !*home) {
-		struct passwd *pwd = getpwuid(getuid());
-		if (pwd)
-			home = pwd->pw_dir;
-	}
+  home = getenv("HOME");
+  if (!home || !*home) {
+    struct passwd *pwd = getpwuid(getuid());
+    if (pwd)
+      home = pwd->pw_dir;
+  }
 
-	if (home && *home) {
-		snprintf(file, size, "%s/.config/" CONFIG_FILE, home);
-		if (! access(file, F_OK))
-			return file;
+  if (home && *home) {
+    snprintf(file, sizeof(file), "%s/.config/" CONFIG_FILE, home);
+    if (!access(file, F_OK))
+      goto found;
 
-		snprintf(file, size, "%s/." CONFIG_FILE, home);
-		if (! access(file, F_OK))
-			return file;
-	}
+    snprintf(file, sizeof(file), "%s/." CONFIG_FILE, home);
+    if (!access(file, F_OK))
+      goto found;
+  }
 
-  free(file);
   return NULL;
+found:
+  return strdup(file);
 }
 

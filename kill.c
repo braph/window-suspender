@@ -21,25 +21,25 @@ static unsigned int processes_allocated;
 
 /* TODO: This is actually part of our configuration ... */
 typedef struct {
-  char *name;
-  GSList *subprocesses;
+  GSList *children_names;
+  char name[1];
 } ProcessRule;
 
 static GSList *process_rules;
 
-void process_rule_add(const char *name, GSList *subprocesses) {
+void process_rule_add(const char *name, GSList *children_names) {
   ProcessRule *rule;
   for (GSList *l = process_rules; l; l = l->next) {
     rule = l->data;
     if (!strcmp(rule->name, name)) {
-      rule->subprocesses = g_slist_concat(rule->subprocesses, subprocesses);
+      rule->children_names = g_slist_concat(rule->children_names, children_names);
       return;
     }
   }
 
-  rule = malloc(sizeof(ProcessRule));
-  rule->name = strdup(name);
-  rule->subprocesses = subprocesses;
+  rule = malloc(sizeof(ProcessRule) + strlen(name));
+  strcpy(rule->name, name);
+  rule->children_names = children_names;
   process_rules = g_slist_prepend(process_rules, rule);
 }
 
@@ -66,7 +66,7 @@ static int get_ppid(const char *pid) {
 
 static const char* get_name(const char *pid) {
   int fd, n;
-  static char buf[256];
+  static char buf[128];
   sprintf(buf, PROC_FS "/%.16s/cmdline", pid);
   if ((fd = open(buf, O_RDONLY)) < 0)
     return NULL;
@@ -75,7 +75,8 @@ static const char* get_name(const char *pid) {
   if (n <= 0)
     return NULL;
   buf[n] = '\0';
-  // WTF? man procfs(5) says arguments should actually be NUL separated ...
+  // Although procfs(5) says that arguments are separated by NUL I found
+  // some processes where this is not the case...
   buf[strcspn(buf, " \t\n")] = '\0';
   const char *lastslash = strrchr(buf, '/');
   return (lastslash ? lastslash + 1 : buf);
@@ -133,26 +134,35 @@ static void kill_children_impl(int pid, int sig)
   int subproc_start = -1;
   unsigned int i;
 
-  // Find parent process
-  for (i = 0; !parent && i < processes_size; ++i)
-    if (processes[i].pid == pid)
-      parent = &processes[i];
-    else if (subproc_start == -1 && processes[i].ppid == pid)
-      subproc_start = i; // Found child "by accident"
-
-  // Find beginning of child processes
-  for (; subproc_start == -1 && i < processes_size; ++i)
-    if (processes[i].ppid == pid)
+  /* Start with searching for the first child. Since the list is sorted we can
+   * leave this function early if we see a PPID > PID. */
+  for (i = 0; i < processes_size; ++i)
+    if (processes[i].ppid == pid) {
       subproc_start = i;
+      break;
+    }
     else if (processes[i].ppid > pid)
-      break; // Not found (list sorted by PPID)
+      return; // Not found
+    else if (processes[i].pid == pid)
+      parent = &processes[i];
+
+  if (subproc_start == -1)
+    return; // No children, no work to do
+
+  // Find parent process
+  if (!parent)
+    for (; i < processes_size; ++i)
+      if (processes[i].pid == pid) {
+        parent = &processes[i];
+        break;
+      }
 
   if (parent && subproc_start != -1) {
     // Find allowed subprocess names for the parent processs
-    GSList *allowed_subprocesses = NULL;
+    GSList *allowed_children_names = NULL;
     for (GSList *p = process_rules; p; p = p->next)
       if (!strcmp(parent->name, ((ProcessRule*) p->data)->name)) {
-        allowed_subprocesses = ((ProcessRule*) p->data)->subprocesses;
+        allowed_children_names = ((ProcessRule*) p->data)->children_names;
         break;
       }
 
@@ -161,8 +171,8 @@ static void kill_children_impl(int pid, int sig)
       if (!strcmp(child->name, parent->name))
         goto KILL; // Child has same name as parent
       else
-        for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
-          if (!strcmp(child->name, subprocess->data))
+        for (GSList *name = allowed_children_names; name; name = name->next)
+          if (!strcmp(child->name, name->data))
             goto KILL;
       continue;
 KILL: kill(child->pid, sig);

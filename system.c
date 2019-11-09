@@ -1,7 +1,7 @@
 #include "system.h"
 #include "conditional.h"
-#include <sys/wait.h>
 #include <stdlib.h>
+#include <sys/wait.h>
 
 #define WINDOW_IS_(STATE) \
   [GET_BIT_POSITION_OF_FLAG(WNCK_WINDOW_STATE_ ## STATE)-1] = "WINDOW_IS_" #STATE

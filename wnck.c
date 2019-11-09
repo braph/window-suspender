@@ -58,7 +58,7 @@ const char* window_state_to_str(WnckWindowState state) {
 }
 
 const char *window_states_to_str(WnckWindowState state) {
-  static char str[256];
+  static char str[192];
 
   str[0] = '\0';
   str[1] = '\0';
@@ -151,7 +151,7 @@ const char* window_get_workspace_name(WnckWindow *win) {
  * ==========================================================================*/
 
 const char* windump(WnckWindow *win) {
-  static char buf[1024];
+  static char buf[512];
 
   if (G_UNLIKELY(win == NULL))
     return "(window == NULL)";

@@ -1,3 +1,4 @@
 objs/*
 window-suspender
 vgcore.*
+gmon.out*

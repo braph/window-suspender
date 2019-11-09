@@ -32,12 +32,10 @@ typedef struct {
 static gboolean suspend_callback(Application*);
 static gboolean refresh_callback(Application*);
 
-#define G_TIMEOUT_RECYCLE_HACK
-#define G_CALLBACK_RECYCLE_HACK
-/* A hack that tries to re-use an existing GTimeoutSource instead of creating
+/* A hack that tries to re-use the existing GTimeoutSource instead of creating
  * a new one. It relies on the GLib internals. */
 static gboolean g_timeout_add_recycled(guint *id, guint interval, GSourceFunc callback, gpointer data) {
-#ifdef G_TIMEOUT_RECYCLE_HACK
+#if 1 /* G_TIMEOUT_RECYCLE_HACK */
   if (*id) {
     struct GTimeoutSource {
       GSource   source;
@@ -48,7 +46,7 @@ static gboolean g_timeout_add_recycled(guint *id, guint interval, GSourceFunc ca
     if (src) {
       src->seconds  = (interval >= 1000 ? TRUE : FALSE);
       src->interval = (interval >= 1000 ? interval/1000 : interval);
-#ifdef G_CALLBACK_RECYCLE_HACK
+#if 1 /* G_CALLBACK_RECYCLE_HACK */
       struct GSourceCallback {
         volatile gint ref_count;
         GSourceFunc func;
@@ -115,7 +113,7 @@ void window_suspend(WnckWindow *win, int suspend_delay, int refresh_delay, int r
     if (app->suspend_delay == suspend_delay &&
         app->refresh_delay == refresh_delay &&
         app->refresh_duration == refresh_duration)
-      return;
+      return; // Suspend parameters did not change;
     else
       application_cancel_timeout(app);
   }
