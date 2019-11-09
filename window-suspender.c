@@ -20,26 +20,22 @@ Statement *config;
 Statement *parse_config(const char*); /* y.tab.c */
 static char* find_config_file();
 
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
   char *config_file = NULL;
   unsigned int foreground = 0;
 
 OPT:
   switch (getopt(argc, argv, "hvfc:")) {
-    case 'c':
-      config_file = optarg;
-      goto OPT;
-    case 'f':
-      foreground = 1;
-      goto OPT;
-    case 'v':
-      verbosity++;
-      goto OPT;
-    case 'h':
-      printf(USAGE, argv[0]);
-      return 0;
-    case -1: break;
-    default: return 1;
+    case 'c': config_file = optarg;
+              goto OPT;
+    case 'f': foreground = 1;
+              goto OPT;
+    case 'v': verbosity++;
+              goto OPT;
+    case 'h': printf(USAGE, *argv);
+              return 0;
+    case -1:  break;
+    default:  return 1;
   }
 
   if (optind != argc) {

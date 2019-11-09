@@ -50,7 +50,7 @@ void process_rule_add(const char *name, GSList *subprocesses) {
 static int get_ppid(const char *pid) {
   int fd, n;
   char buf[128];
-  char *name_end, *ppid_begin;
+  const char *name_end, *ppid_begin;
   sprintf(buf, PROC_FS "/%.16s/stat", pid);
   if ((fd = open(buf, O_RDONLY)) < 0)
     return 0;
@@ -77,7 +77,7 @@ static const char* get_name(const char *pid) {
   buf[n] = '\0';
   // WTF? man procfs(5) says arguments should actually be NUL separated ...
   buf[strcspn(buf, " \t\n")] = '\0';
-  char *lastslash = strrchr(buf, '/');
+  const char *lastslash = strrchr(buf, '/');
   return (lastslash ? lastslash + 1 : buf);
 }
 
@@ -131,13 +131,21 @@ static void kill_children_impl(int pid, int sig)
 {
   struct proc *parent = NULL;
   int subproc_start = -1;
+  unsigned int i;
 
-  // Find process for `pid` and the start index of it's children
-  for (unsigned int i = 0; (!parent || subproc_start == -1) && i < processes_size; ++i)
+  // Find parent process
+  for (i = 0; !parent && i < processes_size; ++i)
+    if (processes[i].pid == pid)
+      parent = &processes[i];
+    else if (subproc_start == -1 && processes[i].ppid == pid)
+      subproc_start = i; // Found child "by accident"
+
+  // Find beginning of child processes
+  for (; subproc_start == -1 && i < processes_size; ++i)
     if (processes[i].ppid == pid)
       subproc_start = i;
-    else if (processes[i].pid == pid)
-      parent = &processes[i];
+    else if (processes[i].ppid > pid)
+      break; // Not found (list sorted by PPID)
 
   if (parent && subproc_start != -1) {
     // Find allowed subprocess names for the parent processs
@@ -148,19 +156,18 @@ static void kill_children_impl(int pid, int sig)
         break;
       }
 
-    for (unsigned int i = subproc_start; i < processes_size && processes[i].ppid == pid; ++i) {
+    for (i = subproc_start; i < processes_size && processes[i].ppid == pid; ++i) {
       struct proc *child = &processes[i];
       if (!strcmp(child->name, parent->name))
-        goto KILL;
+        goto KILL; // Child has same name as parent
       else
         for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
           if (!strcmp(child->name, subprocess->data))
             goto KILL;
       continue;
-KILL:
-      //printf("Killing %d with %d\n", child->pid, sig);
-      kill(child->pid, sig);
+KILL: kill(child->pid, sig);
       kill_children(child->pid, sig);
+      //printf("Killed %d with %d\n", child->pid, sig);
     }
   }
 }
