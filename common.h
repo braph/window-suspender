@@ -43,6 +43,9 @@ typedef enum {
 #define CLASS_SIZE(BASE_STRUCT, KLASS_STRUCT) \
   (offsetof(BASE_STRUCT, klass) + MEMBER_SIZE(BASE_STRUCT, klass.KLASS_STRUCT))
 
+#define __packed \
+  __attribute__((packed))
+
 typedef struct {
   void **data;
   unsigned int size;

@@ -5,8 +5,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "wnck.h"
+#include "common.h"
 
-typedef enum {
+typedef enum __packed {
   CONDITIONAL_LOGIC_OR,
   CONDITIONAL_LOGIC_AND,
   CONDITIONAL_LOGIC_NOT,
@@ -21,7 +22,7 @@ typedef enum {
   CONDITIONAL_SYSTEM,
 } conditional_type;
 
-typedef enum {
+typedef enum __packed {
   COMPARE_EQUAL,
   COMPARE_UNEQUAL,
   COMPARE_LESS,
@@ -30,7 +31,7 @@ typedef enum {
   COMPARE_GREATER_EQUAL,
 } comparison_type;
 
-typedef enum {
+typedef enum __packed {
   WINDOW_TITLE,
   WINDOW_CLASS,
   WINDOW_GROUP,
@@ -39,7 +40,7 @@ typedef enum {
   WINDOW_WORKSPACE,
 } window_string_id;
 
-typedef enum {
+typedef enum __packed {
   HOOK_OPENED,
   HOOK_CLOSED,
   HOOK_CLASS_CHANGED,

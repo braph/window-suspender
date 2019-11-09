@@ -15,7 +15,6 @@
  * since hitting /proc everytime can become very expensive. */
 
 static time_t last_update;
-
 static struct proc { int pid, ppid; char *name; } *processes;
 static unsigned int processes_size;
 static unsigned int processes_allocated;
@@ -48,10 +47,10 @@ void process_rule_add(const char *name, GSList *subprocesses) {
  *  10993 (blabla) S 10415 ...
  *  PID     NAME   S PPID  ...
  */
-static inline int get_ppid_and_name(const char *pid, char **name) {
-  int fd, n, ppid;
-  static char buf[128];
-  char *name_begin, *name_end, *ppid_begin;
+static int get_ppid(const char *pid) {
+  int fd, n;
+  char buf[128];
+  char *name_end, *ppid_begin;
   sprintf(buf, PROC_FS "/%.16s/stat", pid);
   if ((fd = open(buf, O_RDONLY)) < 0)
     return 0;
@@ -60,43 +59,110 @@ static inline int get_ppid_and_name(const char *pid, char **name) {
   if (n <= 0)
     return 0;
   buf[n] = '\0';
-  if (! (name_begin = strchr(buf, '(')))                return 0;
-  if (! (name_end   = strrchr(name_begin, ')')))        return 0;
+  if (! (name_end   = strrchr(buf, ')')))               return 0;
   if (! (ppid_begin = strpbrk(name_end, "0123456789"))) return 0;
-  if (! (ppid       = atoi(ppid_begin)))                return 0;
-  *name_end = '\0';
-  return (*name = name_begin + 1), ppid;
+  return atoi(ppid_begin);
+}
+
+static const char* get_name(const char *pid) {
+  int fd, n;
+  static char buf[256];
+  sprintf(buf, PROC_FS "/%.16s/cmdline", pid);
+  if ((fd = open(buf, O_RDONLY)) < 0)
+    return NULL;
+  n = read(fd, buf, sizeof(buf) - 1);
+  close(fd);
+  if (n <= 0)
+    return NULL;
+  buf[n] = '\0';
+  // WTF? man procfs(5) says arguments should actually be NUL separated ...
+  buf[strcspn(buf, " \t\n")] = '\0';
+  char *lastslash = strrchr(buf, '/');
+  return (lastslash ? lastslash + 1 : buf);
+}
+
+static int proc_cmp_ppid(const void *a, const void *b) {
+  return ((struct proc*) a)->ppid - ((struct proc*) b)->ppid;
 }
 
 static void read_processes()
 {
-  while (processes_size)
-    free(processes[--processes_size].name);
+  processes_size = 0;
 
   DIR *dir = opendir(PROC_FS);
   if (dir) {
     struct dirent *file;
-    struct proc process;
     while ((file = readdir(dir))) {
-      process.pid = atoi(file->d_name);
-      if (process.pid < MINIMUM_PROCESS_ID)
+      int pid = atoi(file->d_name);
+      if (pid < MINIMUM_PROCESS_ID)
         continue;
-      process.ppid = get_ppid_and_name(file->d_name, &process.name);
-      if (process.ppid < 1)
+      int ppid = get_ppid(file->d_name);
+      if (!ppid)
         continue;
-      process.name = strdup(process.name);
+      const char *name = get_name(file->d_name);
+      if (!name /* error */ || !*name /* zombie */)
+        continue;
 
-      if (processes_size == processes_allocated) {
+      if (processes_size >= processes_allocated) {
         processes_allocated += 16;
         processes = realloc(processes, processes_allocated * sizeof(*processes));
+        for (unsigned int i = processes_allocated - 16; i < processes_allocated; ++i)
+          processes[i].name = NULL;
       }
-      processes[processes_size++] = process;
+
+      processes[processes_size].pid = pid;
+      processes[processes_size].ppid = ppid;
+      // Maybe we're lucky and the string fits into existing memory
+      if (processes[processes_size].name && strlen(processes[processes_size].name) >= strlen(name));
+      else processes[processes_size].name = realloc(processes[processes_size].name, strlen(name) + 1);
+      strcpy(processes[processes_size].name, name);
+      ++processes_size;
     }
     closedir(dir);
   }
 
+  qsort(processes, processes_size, sizeof(*processes), proc_cmp_ppid);
+
   //for (unsigned int i = 0; i < processes_size; ++i)
   //  printf("Process: %5d PPID=%5d [%s]\n", processes[i].pid, processes[i].ppid, processes[i].name);
+}
+
+static void kill_children_impl(int pid, int sig)
+{
+  struct proc *parent = NULL;
+  int subproc_start = -1;
+
+  // Find process for `pid` and the start index of it's children
+  for (unsigned int i = 0; (!parent || subproc_start == -1) && i < processes_size; ++i)
+    if (processes[i].ppid == pid)
+      subproc_start = i;
+    else if (processes[i].pid == pid)
+      parent = &processes[i];
+
+  if (parent && subproc_start != -1) {
+    // Find allowed subprocess names for the parent processs
+    GSList *allowed_subprocesses = NULL;
+    for (GSList *p = process_rules; p; p = p->next)
+      if (!strcmp(parent->name, ((ProcessRule*) p->data)->name)) {
+        allowed_subprocesses = ((ProcessRule*) p->data)->subprocesses;
+        break;
+      }
+
+    for (unsigned int i = subproc_start; i < processes_size && processes[i].ppid == pid; ++i) {
+      struct proc *child = &processes[i];
+      if (!strcmp(child->name, parent->name))
+        goto KILL;
+      else
+        for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
+          if (!strcmp(child->name, subprocess->data))
+            goto KILL;
+      continue;
+KILL:
+      //printf("Killing %d with %d\n", child->pid, sig);
+      kill(child->pid, sig);
+      kill_children(child->pid, sig);
+    }
+  }
 }
 
 void kill_children(int pid, int sig)
@@ -107,45 +173,6 @@ void kill_children(int pid, int sig)
     last_update = now;
   }
 
-  struct proc *parent = NULL;
-  static PointerArray children = { 0 };
-  children.size = 0;
-
-  for (unsigned int i = 0; i < processes_size; ++i)
-    if (processes[i].ppid == pid)
-      pointer_array_add(&children, &processes[i]);
-    else if (processes[i].pid == pid)
-      parent = &processes[i];
-
-  if (parent && children.size) {
-    // Find allowed subprocess names for the parent processs
-    GSList *allowed_subprocesses = NULL;
-    for (GSList *p = process_rules; p; p = p->next)
-      if (!strcmp(parent->name, ((ProcessRule*) p->data)->name)) {
-        allowed_subprocesses = ((ProcessRule*) p->data)->subprocesses;
-        break;
-      }
-
-    int to_kill[64];
-    unsigned int to_kill_size = 0;
-
-    for (unsigned int i = 0; i < children.size && to_kill_size < ARRAY_SIZE(to_kill); ++i) {
-      struct proc *child = children.data[i];
-      if (!strcmp(child->name, parent->name))
-        to_kill[to_kill_size++] = child->pid;
-      else {
-        for (GSList *subprocess = allowed_subprocesses; subprocess; subprocess = subprocess->next)
-          if (!strcmp(child->name, subprocess->data)) {
-            to_kill[to_kill_size++] = child->pid;
-            break;
-          }
-      }
-    }
-
-    while (to_kill_size--) {
-      //log_debug("Killing %d with %d\n", to_kill[to_kill_size], sig);
-      kill(to_kill[to_kill_size], sig);
-      kill_children(to_kill[to_kill_size], sig);
-    }
-  }
+  kill_children_impl(pid, sig);
 }
+

@@ -6,7 +6,7 @@
 #include "common.h"
 #include "conditional.h"
 
-typedef enum {
+typedef enum __packed {
   STATEMENT_IF,
   STATEMENT_PRINT,
   STATEMENT_SYSTEM,

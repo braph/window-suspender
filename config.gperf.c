@@ -110,8 +110,8 @@ struct __attribute__((packed)) token {
 #define LEX_ERROR '\1' // TODO: What does yylex() really return on error?
 
 FILE *yyin;
-char *yytext;
-unsigned int yyleng;
+static char *yytext;
+static unsigned int yyleng;
 static unsigned int yyallocated;
 unsigned int yylineno = 1;
 unsigned int yylinepos = 0;
@@ -137,7 +137,7 @@ static void UNGETC(int c) {
 
 static void yytext_append(int c) {
   if (yyleng >= yyallocated) {
-    yyallocated += 1024;
+    yyallocated += 512;
     yytext = realloc(yytext, yyallocated);
   }
   yytext[yyleng++] = c;
@@ -145,7 +145,7 @@ static void yytext_append(int c) {
 
 static void yytext_finalize() {
   if (yyleng >= yyallocated) {
-    yyallocated += 1024;
+    yyallocated += 512;
     yytext = realloc(yytext, yyallocated);
   }
   yytext[yyleng] = '\0';
@@ -176,7 +176,6 @@ WAIT_FOR_TERMINATING_SLASH:
           switch ((c = GETC())) {
             case '*': goto WAIT_FOR_TERMINATING_SLASH;
             case '/': goto NEXT; }
-
       printerr("Warning: EOF reached while scanning /* */ comment\n");
       return EOF;
     case '&':
@@ -227,9 +226,8 @@ WAIT_FOR_TERMINATING_SLASH:
       if (! (isalpha(c) || c == '-' || c == '_'))
         return c; // Cannot be a keyword
 
-      do {
-        yytext_append(c);
-      } while (c = GETC(), (isalpha(c) || c == '-' || c == '_'));
+      do yytext_append(c);
+      while (c = GETC(), (isalpha(c) || c == '-' || c == '_'));
       UNGETC(c);
       yytext_finalize();
       //printf("Having keyword: >%s< (strlen(%d) == yyleng(%d))\n", yytext, strlen(yytext), yyleng);

@@ -1,9 +1,7 @@
 - Error handling (e.g. invalid regexes)
 - Hints for syntax errors
 - Warning message for colliding suspend-commands
-- Destroy the app
 - Add DBus?
-- Keywords for logic: 'and', 'or', 'not', maybe 'in'
-- XOR ?
+- Keywords for logic: 'and', 'or', 'not', maybe 'in' and 'xor'
 - Geometry condition, Geometry actions
 - Better string parsing
