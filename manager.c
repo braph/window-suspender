@@ -12,62 +12,78 @@ hook_type window_hook;
 /* ============================================================================
  * Suspend / Refresh / Resume / Restore
  *
- * Code for sending signals to processes.
+ * Code for sending signals to an application.
  * ==========================================================================*/
 
 typedef enum {
   STATE_UNHANDELED,
-  STATE_IS_SUSPENDING,
+  STATE_DO_SUSPEND,
   STATE_SUSPENDED,
+  STATE_DO_REFRESH,
+  STATE_DO_DESTROY,
 } ApplicationState;
 
 typedef struct {
+  GSource source;
   WnckApplication *wnck_app;
   ApplicationState state;
-  unsigned int timeout_id;
   unsigned int suspend_delay;
   unsigned int refresh_delay;
   unsigned int refresh_duration;
 } Application;
 
-static gboolean suspend_callback(Application*);
-static gboolean refresh_callback(Application*);
+static void kill_wnck_application(WnckApplication*, int);
+static gboolean application_handle_state(GSource*, GSourceFunc, gpointer);
 
-/* A hack that tries to re-use the existing GTimeoutSource instead of creating
- * a new one. It relies on the GLib internals. */
-static gboolean g_timeout_add_recycled(guint *id, guint interval, GSourceFunc callback, gpointer data) {
-#if 1 /* G_TIMEOUT_RECYCLE_HACK */
-  if (*id) {
-    struct GTimeoutSource {
-      GSource   source;
-      guint     interval;
-      gboolean  seconds;
-    } *src = (struct GTimeoutSource*) g_main_context_find_source_by_id(NULL, *id);
-
-    if (src) {
-      src->seconds  = (interval >= 1000 ? TRUE : FALSE);
-      src->interval = (interval >= 1000 ? interval/1000 : interval);
-#if 1 /* G_CALLBACK_RECYCLE_HACK */
-      struct GSourceCallback {
-        volatile gint ref_count;
-        GSourceFunc func;
-        gpointer    data;
-      } *cb = ((GSource*) src)->callback_data;
-      cb->func = callback;
-      cb->data = data;
-#else
-      g_source_set_callback((GSource*) src, callback, data, NULL);
-#endif
-      return G_SOURCE_CONTINUE;
-    }
+#define NOW 0
+#define NEVER -1
+static inline void application_next_state(Application* app, ApplicationState state, unsigned int timeout) {
+  app->state = state;
+  if (timeout == NOW) {
+    g_source_set_ready_time((GSource*) app, NEVER);
+    application_handle_state((GSource*) app, NULL, NULL);
   }
-#endif
-  if (interval >= 1000)
-    *id = g_timeout_add_seconds(interval/1000, callback, data);
-  else
-    *id = g_timeout_add(interval, callback, data);
+  else if (timeout == NEVER) g_source_set_ready_time((GSource*) app, NEVER);
+  else g_source_set_ready_time((GSource*) app, g_get_monotonic_time() + timeout * 1000);
+}
 
-  return G_SOURCE_REMOVE;
+static gboolean application_handle_state(GSource *source, GSourceFunc f, gpointer p) {
+  Application *app = (Application*) source;
+  switch (app->state) {
+    case STATE_UNHANDELED:
+      log_critical("Programming error: Timeout for STATE_UNHANDELED should be NEVER\n");
+      break;
+    case STATE_DO_SUSPEND:
+      //printf("Suspending"); wnck_application_dump(app->wnck_app);
+      kill_wnck_application(app->wnck_app, SIGSTOP);
+      if (app->refresh_delay)
+        application_next_state(app, STATE_DO_REFRESH, app->refresh_delay);
+      else
+        application_next_state(app, STATE_SUSPENDED, NOW);
+    case STATE_SUSPENDED:
+      break;
+    case STATE_DO_REFRESH:
+      //printf("Waking"); wnck_application_dump(app->wnck_app);
+      kill_wnck_application(app->wnck_app, SIGCONT);
+      application_next_state(app, STATE_DO_SUSPEND, app->refresh_duration);
+      break;
+    case STATE_DO_DESTROY:
+      return G_SOURCE_REMOVE;
+  }
+
+  return G_SOURCE_CONTINUE;
+}
+
+static inline Application* application_new(WnckApplication *wnck_app) {
+  static GSourceFuncs gsource_funcs = {
+    NULL, NULL, application_handle_state, NULL, NULL, NULL
+  };
+
+  GSource *source = g_source_new(&gsource_funcs, sizeof(Application));
+  Application *app = (Application*) source;
+  app->wnck_app = wnck_app;
+  g_source_attach(source, NULL);
+  return app;
 }
 
 static Application* get_application_for_wnck_application(WnckApplication *wnck_app) {
@@ -79,74 +95,44 @@ static Application* get_application_for_wnck_application(WnckApplication *wnck_a
 
 static void kill_wnck_application(WnckApplication* wnck_app, int sig) {
   int pid = wnck_application_get_pid(wnck_app);
-  if (G_UNLIKELY(!pid)) {
-    log_critical("kill_wnck_application: PID == 0");
-    return;
-  }
+  g_return_if_fail(pid);
   log_signal("Sending %s to %d \"%s\"\n", (sig == SIGCONT ? "SIGCONT" : "SIGSTOP"),
       pid, wnck_application_get_name(wnck_app));
   kill(pid, sig);
   kill_children(pid, sig);
 }
 
-static void application_cancel_timeout(Application* app) {
-  log_debug("Removing timeout source %d\n", app->timeout_id);
-  if (app->timeout_id)
-    g_source_remove(app->timeout_id);
-  app->timeout_id = 0;
-  app->state = STATE_UNHANDELED;
-}
-
 /* Suspend a process and cancel outstanding suspend/refresh jobs */
 void window_suspend(WnckWindow *win, int suspend_delay, int refresh_delay, int refresh_duration) {
   WnckApplication *wnck_app = wnck_window_get_application(win);
-  if (G_UNLIKELY(!wnck_app)) {
-    log_critical("window_suspend: WnckApplication == NULL: %s\n", windump(win));
-    return;
-  }
+  g_return_if_fail(wnck_app);
   Application *app = get_application_for_wnck_application(wnck_app);
-  if (G_UNLIKELY(!app)) {
-    log_critical("window_suspend: Application == NULL: %s\n", windump(win));
-    return;
-  }
+  g_return_if_fail(app);
 
   if (app->state != STATE_UNHANDELED) {
     if (app->suspend_delay == suspend_delay &&
         app->refresh_delay == refresh_delay &&
         app->refresh_duration == refresh_duration)
       return; // Suspend parameters did not change;
-    else
-      application_cancel_timeout(app);
   }
 
   app->suspend_delay = suspend_delay;
   app->refresh_delay = refresh_delay;
   app->refresh_duration = refresh_duration;
-  app->state = STATE_IS_SUSPENDING;
-  if (suspend_delay)
-    g_timeout_add_recycled(&app->timeout_id,
-        suspend_delay, (GSourceFunc) suspend_callback, app);
-  else
-    suspend_callback(app);
+  application_next_state(app, STATE_DO_SUSPEND, app->suspend_delay);
 }
 
 /* Resume a process (only if it has previously been stopped by us) and cancel
  * outstanding suspend/refresh jobs */
 void window_resume(WnckWindow *win) {
   WnckApplication *wnck_app = wnck_window_get_application(win);
-  if (G_UNLIKELY(!wnck_app)) {
-    log_critical("window_resume: WnckApplication == NULL: %s\n", windump(win));
-    return;
-  }
+  g_return_if_fail(wnck_app);
   Application *app = get_application_for_wnck_application(wnck_app);
-  if (G_UNLIKELY(!app)) {
-    log_critical("window_resume: Application == NULL: %s\n", windump(win));
-    return;
-  }
+  g_return_if_fail(app);
 
   if (app->state != STATE_UNHANDELED) {
-    application_cancel_timeout(app);
     kill_wnck_application(wnck_app, SIGCONT);
+    application_next_state(app, STATE_UNHANDELED, NEVER);
   }
 }
 
@@ -156,38 +142,11 @@ void restore_processes() {
   for (GSList *l = applications; l; l = l->next) {
     Application *app = l->data;
     if (app->state != STATE_UNHANDELED) {
-      application_cancel_timeout(app);
       if (verbosity)
         wnck_application_dump(app->wnck_app);
       kill_wnck_application(app->wnck_app, SIGCONT);
     }
   }
-}
-
-static gboolean suspend_callback(Application *app) {
-  /* This callback may still be fired even if it was removed using
-   * g_source_remove(). We take a look at the state to determine if we
-   * should actually suspend the application. */
-  if (app->state == STATE_UNHANDELED)
-    return G_SOURCE_REMOVE;
-
-  log_debug("suspend_callback: %d\n", app->timeout_id);
-  kill_wnck_application(app->wnck_app, SIGSTOP);
-  app->state = STATE_SUSPENDED;
-  if (app->refresh_delay)
-    return g_timeout_add_recycled(&app->timeout_id,
-        app->refresh_delay, (GSourceFunc) refresh_callback, app);
-  else {
-    app->timeout_id = 0;
-    return G_SOURCE_REMOVE;
-  }
-}
-
-static gboolean refresh_callback(Application *app) {
-  log_debug("refresh_callback: %d\n", app->timeout_id);
-  kill_wnck_application(app->wnck_app, SIGCONT);
-  return g_timeout_add_recycled(&app->timeout_id,
-      app->refresh_duration, (GSourceFunc) suspend_callback, app);
 }
 
 /* ============================================================================
@@ -336,15 +295,13 @@ static inline void window_connect_signals(WnckWindow *win) {
 static void on_application_event(WnckScreen* _, WnckApplication* wnck_app, gpointer opened) {
   Application *app;
   if (opened) {
-    app = calloc(1, sizeof(Application));
-    app->wnck_app = wnck_app;
+    app = application_new(wnck_app);
     applications = g_slist_prepend(applications, app);
   }
   else /* closed */ {
     app = get_application_for_wnck_application(wnck_app);
-    application_cancel_timeout(app);
+    application_next_state(app, STATE_DO_DESTROY, NOW);
     applications = g_slist_remove(applications, app);
-    free(app);
   }
   log_event("screen::on_application_event(): %s %d %s\n", (opened ? "added" : "removed"),
       wnck_application_get_pid(wnck_app), wnck_application_get_name(wnck_app));
