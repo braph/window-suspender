@@ -7,6 +7,7 @@
 
 extern Statement *config;
 static GSList *applications;
+hook_type window_hook;
 
 /* ============================================================================
  * Suspend / Refresh / Resume / Restore

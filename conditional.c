@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdio.h>
 
-hook_type window_hook;
-
 #define this (*self)
 
 bool conditional_check(Conditional *self, WnckWindow *win) {

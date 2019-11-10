@@ -192,6 +192,6 @@ process 'chrome-sandbox' has children 'bnox';
 
 return;
 
-system 'env|grep WINDOW';
+system 'env|grep WINDOW_';
 system 'echo PID=$WINDOW_PID class="$WINDOW_CLASS", group="$WINDOW_GROUP" [$WINDOW_DESKTOP]{$WINDOW_STACKPOSITION} "$WINDOW_TITLE" type=$WINDOW_TYPE states=$WINDOW_STATE';
 
