@@ -67,7 +67,7 @@ Statement* parse_config(const char *file) {
 
 %type <conditional> condition
 %type <statement> config statement statement_list
-%type <statement> compound_statement command_statement if_statement suspend_statement
+%type <statement> command_statement if_statement suspend_statement
 %type <comparison> numeric_comparison
 %type <string_list> string_list
 
@@ -79,7 +79,7 @@ Statement* parse_config(const char *file) {
 %%
 
 config
-    : /*empty*/      { config = statement_return_new(); }
+    : /*empty*/      { config = statement_noop_new(); }
     | statement_list { config = $1; }
     | process_children_list statement_list { config = $2; }
     ;
@@ -125,16 +125,12 @@ condition
 
 statement
     : if_statement
-    | command_statement
-    | compound_statement
+    | command_statement ';'  { $$ = $1; }
+    | '{' statement_list '}' { $$ = $2; }
     ;
 
 if_statement
     : '(' condition ')' statement { $$ = statement_if_new($2, $4); }
-    ;
-
-compound_statement
-    : '{' statement_list '}' { $$ = $2; }
     ;
 
 statement_list
@@ -143,18 +139,17 @@ statement_list
     ;
 
 suspend_statement
-    : SUSPEND { $$ = statement_suspend_new(0,0,0); }
-    | suspend_statement OPTION_SUSPEND_DELAY NUMBER    { $1->klass.suspend.suspend_delay = $3; }
-    | suspend_statement OPTION_REFRESH_DELAY NUMBER    { $1->klass.suspend.refresh_delay = $3; }
+    : SUSPEND                                          { $$ = statement_suspend_new(0,0,0);       }
+    | suspend_statement OPTION_SUSPEND_DELAY NUMBER    { $1->klass.suspend.suspend_delay = $3;    }
+    | suspend_statement OPTION_REFRESH_DELAY NUMBER    { $1->klass.suspend.refresh_delay = $3;    }
     | suspend_statement OPTION_REFRESH_DURATION NUMBER { $1->klass.suspend.refresh_duration = $3; }
     ;
 
 command_statement
-    : ';'               { $$ = statement_noop_new(); }
-    | PRINT STRING ';'  { $$ = statement_print_new($2);  free($2); }
-    | SYSTEM STRING ';' { $$ = statement_system_new($2); free($2); }
-    | RETURN ';'        { $$ = statement_return_new(); }
-    | ACTION_TYPE ';'   { $$ = statement_action_new($1); }
-    | suspend_statement ';'
+    : /* empty */   { $$ = statement_noop_new();               }
+    | PRINT STRING  { $$ = statement_print_new($2);  free($2); }
+    | SYSTEM STRING { $$ = statement_system_new($2); free($2); }
+    | RETURN        { $$ = statement_return_new();             }
+    | ACTION_TYPE   { $$ = statement_action_new($1);           }
+    | suspend_statement
     ;
-
