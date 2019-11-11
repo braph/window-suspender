@@ -66,7 +66,7 @@
 
 
 /* First part of user prologue.  */
-#line 1 "config.y"
+#line 1 "config.parser.y"
 
 #include <errno.h>
 #include <stdio.h>
@@ -79,39 +79,32 @@
 
 #define C_NOT(X) conditional_logic_not_new(X)
 
-int yylex();
-int yyparse();
+int yylex(), yyparse();
 extern FILE *yyin;
 extern int yylineno, yylinepos;
 static Statement *config;
-static int parsing_error;
 
-void yyerror(const char *str)
-{
+void yyerror(const char *str) {
   printerr("Error: %s (line: %d:%d)\n", str, yylineno, yylinepos);
-  parsing_error = 1;
 }
 
 Statement* parse_config(const char *file) {
+  if (! (yyin = fopen(file, "r")))
+    return printerr("Error: %s: %s\n", file, strerror(errno)), NULL;
+
   config = NULL;
-  parsing_error = 0;
-  if (! (yyin = fopen(file, "r"))) {
-    printerr("Error: %s: %s\n", file, strerror(errno));
-    return NULL;
-  }
-  yyparse();
-  fclose(yyin);
-  if (parsing_error) {
-    if (config) {
+  errno = yyparse();
+  if (errno) {
+    if (config)
       statement_free(config);
-      config = NULL;
-    }
+    config = NULL;
   }
+  fclose(yyin);
   return config;
 }
 
 
-#line 115 "y.tab.c"
+#line 108 "config.parser.tab.c"
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus
@@ -133,10 +126,7 @@ Statement* parse_config(const char *file) {
 # define YYERROR_VERBOSE 0
 #endif
 
-/* Use api.header.include to #include this header
-   instead of duplicating it here.  */
-#ifndef YY_YY_Y_TAB_H_INCLUDED
-# define YY_YY_Y_TAB_H_INCLUDED
+
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -186,47 +176,12 @@ extern int yydebug;
     OR_OR = 291
   };
 #endif
-/* Tokens.  */
-#define STRING 258
-#define NUMBER 259
-#define WINDOW_STATE 260
-#define WINDOW_TYPE 261
-#define WINDOW_FIELD 262
-#define HOOK_TYPE 263
-#define ACTION_TYPE 264
-#define EQUAL 265
-#define UNEQUAL 266
-#define LESS 267
-#define LESS_EQUAL 268
-#define GREATER 269
-#define GREATER_EQUAL 270
-#define REGEX_EQUAL 271
-#define REGEX_UNEQUAL 272
-#define CONTAINS 273
-#define PRINT 274
-#define SYSTEM 275
-#define SUSPEND 276
-#define RETURN 277
-#define PROCESS 278
-#define HAS 279
-#define CHILDREN 280
-#define OPTION_SUSPEND_DELAY 281
-#define OPTION_REFRESH_DELAY 282
-#define OPTION_REFRESH_DURATION 283
-#define COND_TYPE 284
-#define COND_STACKPOSITION 285
-#define COND_STATE 286
-#define COND_HOOK 287
-#define COND_WORKSPACE_NUMBER 288
-#define NOT 289
-#define AND_AND 290
-#define OR_OR 291
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 47 "config.y"
+#line 40 "config.parser.y"
 
   int number;
   char *string;
@@ -240,7 +195,7 @@ union YYSTYPE
   struct Conditional *conditional;
   GSList *string_list;
 
-#line 244 "y.tab.c"
+#line 199 "config.parser.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -253,7 +208,7 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_Y_TAB_H_INCLUDED  */
+
 
 
 
@@ -549,12 +504,12 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    89,    89,    90,    91,    95,    96,   100,   104,   105,
-     109,   109,   109,   109,   109,   109,   113,   114,   115,   116,
-     117,   118,   119,   120,   121,   122,   123,   124,   125,   126,
-     127,   128,   129,   130,   134,   135,   136,   140,   144,   148,
-     149,   153,   154,   155,   156,   160,   161,   162,   163,   164,
-     165
+       0,    82,    82,    83,    84,    88,    89,    93,    97,    98,
+     102,   102,   102,   102,   102,   102,   106,   107,   108,   109,
+     110,   111,   112,   113,   114,   115,   116,   117,   118,   119,
+     120,   121,   122,   123,   127,   128,   129,   133,   137,   141,
+     142,   146,   147,   148,   149,   153,   154,   155,   156,   157,
+     158
 };
 #endif
 
@@ -1401,223 +1356,223 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 89 "config.y"
+#line 82 "config.parser.y"
     { config = statement_return_new(); }
-#line 1407 "y.tab.c"
+#line 1362 "config.parser.tab.c"
     break;
 
   case 3:
-#line 90 "config.y"
+#line 83 "config.parser.y"
     { config = (yyvsp[0].statement); }
-#line 1413 "y.tab.c"
+#line 1368 "config.parser.tab.c"
     break;
 
   case 4:
-#line 91 "config.y"
+#line 84 "config.parser.y"
     { config = (yyvsp[0].statement); }
-#line 1419 "y.tab.c"
+#line 1374 "config.parser.tab.c"
     break;
 
   case 7:
-#line 100 "config.y"
+#line 93 "config.parser.y"
     { process_rule_add((yyvsp[-4].string), (yyvsp[-1].string_list)); free((yyvsp[-4].string)); }
-#line 1425 "y.tab.c"
+#line 1380 "config.parser.tab.c"
     break;
 
   case 8:
-#line 104 "config.y"
+#line 97 "config.parser.y"
     { (yyval.string_list) = g_slist_append(NULL, (yyvsp[0].string)); }
-#line 1431 "y.tab.c"
+#line 1386 "config.parser.tab.c"
     break;
 
   case 9:
-#line 105 "config.y"
+#line 98 "config.parser.y"
     { (yyval.string_list) = g_slist_append((yyvsp[-2].string_list), (yyvsp[0].string));   }
-#line 1437 "y.tab.c"
+#line 1392 "config.parser.tab.c"
     break;
 
   case 16:
-#line 113 "config.y"
+#line 106 "config.parser.y"
     { (yyval.conditional) = conditional_string_match_new((yyvsp[-2].field), (yyvsp[0].string));         free((yyvsp[0].string)); }
-#line 1443 "y.tab.c"
+#line 1398 "config.parser.tab.c"
     break;
 
   case 17:
-#line 114 "config.y"
+#line 107 "config.parser.y"
     { (yyval.conditional) = C_NOT(conditional_string_match_new((yyvsp[-2].field), (yyvsp[0].string)));  free((yyvsp[0].string)); }
-#line 1449 "y.tab.c"
+#line 1404 "config.parser.tab.c"
     break;
 
   case 18:
-#line 115 "config.y"
+#line 108 "config.parser.y"
     { (yyval.conditional) = conditional_regex_match_new((yyvsp[-2].field), (yyvsp[0].string));        free((yyvsp[0].string)); }
-#line 1455 "y.tab.c"
+#line 1410 "config.parser.tab.c"
     break;
 
   case 19:
-#line 116 "config.y"
+#line 109 "config.parser.y"
     { (yyval.conditional) = C_NOT(conditional_regex_match_new((yyvsp[-2].field), (yyvsp[0].string))); free((yyvsp[0].string)); }
-#line 1461 "y.tab.c"
+#line 1416 "config.parser.tab.c"
     break;
 
   case 20:
-#line 117 "config.y"
+#line 110 "config.parser.y"
     { (yyval.conditional) = conditional_string_contains_new((yyvsp[-2].field), (yyvsp[0].string));      free((yyvsp[0].string)); }
-#line 1467 "y.tab.c"
+#line 1422 "config.parser.tab.c"
     break;
 
   case 21:
-#line 118 "config.y"
+#line 111 "config.parser.y"
     { (yyval.conditional) = conditional_system_new((yyvsp[0].string));                   free((yyvsp[0].string)); }
-#line 1473 "y.tab.c"
+#line 1428 "config.parser.tab.c"
     break;
 
   case 22:
-#line 119 "config.y"
+#line 112 "config.parser.y"
     { (yyval.conditional) = conditional_windowtype_new((yyvsp[0].type));         }
-#line 1479 "y.tab.c"
+#line 1434 "config.parser.tab.c"
     break;
 
   case 23:
-#line 120 "config.y"
+#line 113 "config.parser.y"
     { (yyval.conditional) = C_NOT(conditional_windowtype_new((yyvsp[0].type)));  }
-#line 1485 "y.tab.c"
+#line 1440 "config.parser.tab.c"
     break;
 
   case 24:
-#line 121 "config.y"
+#line 114 "config.parser.y"
     { (yyval.conditional) = conditional_hook_new((yyvsp[0].hook));               }
-#line 1491 "y.tab.c"
+#line 1446 "config.parser.tab.c"
     break;
 
   case 25:
-#line 122 "config.y"
+#line 115 "config.parser.y"
     { (yyval.conditional) = C_NOT(conditional_hook_new((yyvsp[0].hook)));        }
-#line 1497 "y.tab.c"
+#line 1452 "config.parser.tab.c"
     break;
 
   case 26:
-#line 123 "config.y"
+#line 116 "config.parser.y"
     { (yyval.conditional) = conditional_windowstate_new((yyvsp[0].state));        }
-#line 1503 "y.tab.c"
+#line 1458 "config.parser.tab.c"
     break;
 
   case 27:
-#line 124 "config.y"
+#line 117 "config.parser.y"
     { (yyval.conditional) = C_NOT(conditional_windowstate_new((yyvsp[0].state))); }
-#line 1509 "y.tab.c"
+#line 1464 "config.parser.tab.c"
     break;
 
   case 28:
-#line 125 "config.y"
+#line 118 "config.parser.y"
     { (yyval.conditional) = conditional_stackposition_new((yyvsp[-1].comparison), (yyvsp[0].number)); }
-#line 1515 "y.tab.c"
+#line 1470 "config.parser.tab.c"
     break;
 
   case 29:
-#line 126 "config.y"
+#line 119 "config.parser.y"
     { (yyval.conditional) = conditional_workspace_number_new((yyvsp[-1].comparison), (yyvsp[0].number)); }
-#line 1521 "y.tab.c"
+#line 1476 "config.parser.tab.c"
     break;
 
   case 30:
-#line 127 "config.y"
+#line 120 "config.parser.y"
     { (yyval.conditional) = conditional_logic_and_new((yyvsp[-2].conditional), (yyvsp[0].conditional)); }
-#line 1527 "y.tab.c"
+#line 1482 "config.parser.tab.c"
     break;
 
   case 31:
-#line 128 "config.y"
+#line 121 "config.parser.y"
     { (yyval.conditional) = conditional_logic_or_new((yyvsp[-2].conditional), (yyvsp[0].conditional)); }
-#line 1533 "y.tab.c"
+#line 1488 "config.parser.tab.c"
     break;
 
   case 32:
-#line 129 "config.y"
+#line 122 "config.parser.y"
     { (yyval.conditional) = C_NOT((yyvsp[0].conditional)); }
-#line 1539 "y.tab.c"
+#line 1494 "config.parser.tab.c"
     break;
 
   case 33:
-#line 130 "config.y"
+#line 123 "config.parser.y"
     { (yyval.conditional) = (yyvsp[-1].conditional); }
-#line 1545 "y.tab.c"
+#line 1500 "config.parser.tab.c"
     break;
 
   case 37:
-#line 140 "config.y"
+#line 133 "config.parser.y"
     { (yyval.statement) = statement_if_new((yyvsp[-2].conditional), (yyvsp[0].statement)); }
-#line 1551 "y.tab.c"
+#line 1506 "config.parser.tab.c"
     break;
 
   case 38:
-#line 144 "config.y"
+#line 137 "config.parser.y"
     { (yyval.statement) = (yyvsp[-1].statement); }
-#line 1557 "y.tab.c"
+#line 1512 "config.parser.tab.c"
     break;
 
   case 40:
-#line 149 "config.y"
+#line 142 "config.parser.y"
     { (yyvsp[-1].statement)->next = (yyvsp[0].statement); }
-#line 1563 "y.tab.c"
+#line 1518 "config.parser.tab.c"
     break;
 
   case 41:
-#line 153 "config.y"
+#line 146 "config.parser.y"
     { (yyval.statement) = statement_suspend_new(0,0,0); }
-#line 1569 "y.tab.c"
+#line 1524 "config.parser.tab.c"
     break;
 
   case 42:
-#line 154 "config.y"
+#line 147 "config.parser.y"
     { (yyvsp[-2].statement)->klass.suspend.suspend_delay = (yyvsp[0].number); }
-#line 1575 "y.tab.c"
+#line 1530 "config.parser.tab.c"
     break;
 
   case 43:
-#line 155 "config.y"
+#line 148 "config.parser.y"
     { (yyvsp[-2].statement)->klass.suspend.refresh_delay = (yyvsp[0].number); }
-#line 1581 "y.tab.c"
+#line 1536 "config.parser.tab.c"
     break;
 
   case 44:
-#line 156 "config.y"
+#line 149 "config.parser.y"
     { (yyvsp[-2].statement)->klass.suspend.refresh_duration = (yyvsp[0].number); }
-#line 1587 "y.tab.c"
+#line 1542 "config.parser.tab.c"
     break;
 
   case 45:
-#line 160 "config.y"
+#line 153 "config.parser.y"
     { (yyval.statement) = statement_noop_new(); }
-#line 1593 "y.tab.c"
+#line 1548 "config.parser.tab.c"
     break;
 
   case 46:
-#line 161 "config.y"
+#line 154 "config.parser.y"
     { (yyval.statement) = statement_print_new((yyvsp[-1].string));  free((yyvsp[-1].string)); }
-#line 1599 "y.tab.c"
+#line 1554 "config.parser.tab.c"
     break;
 
   case 47:
-#line 162 "config.y"
+#line 155 "config.parser.y"
     { (yyval.statement) = statement_system_new((yyvsp[-1].string)); free((yyvsp[-1].string)); }
-#line 1605 "y.tab.c"
+#line 1560 "config.parser.tab.c"
     break;
 
   case 48:
-#line 163 "config.y"
+#line 156 "config.parser.y"
     { (yyval.statement) = statement_return_new(); }
-#line 1611 "y.tab.c"
+#line 1566 "config.parser.tab.c"
     break;
 
   case 49:
-#line 164 "config.y"
+#line 157 "config.parser.y"
     { (yyval.statement) = statement_action_new((yyvsp[-1].action_type)); }
-#line 1617 "y.tab.c"
+#line 1572 "config.parser.tab.c"
     break;
 
 
-#line 1621 "y.tab.c"
+#line 1576 "config.parser.tab.c"
 
       default: break;
     }

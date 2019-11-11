@@ -1,6 +1,5 @@
 # Options
 DEBUG    ?= 0
-LEXER    ?= gperf # 'lex' for using lex, 'gperf' for using gperf
 CC_FLAGS ?= -Wall -Wpedantic -O2
 # /Options
 
@@ -9,7 +8,7 @@ PKG_CONFIG_FLAGS := $(shell pkg-config --cflags libwnck-3.0 glib-2.0)
 CC_FLAGS   += -DDEBUG=$(DEBUG) $(PKG_CONFIG_FLAGS)
 LEXER_FILE = lexer_$(LEXER)
 
-SRC_FILES := window-suspender manager wnck common conditional statement system kill y.tab $(LEXER_FILE)
+SRC_FILES := window-suspender manager wnck common conditional statement system kill config.parser.tab config.lexer
 OBJ_FILES := $(addsuffix .o, $(SRC_FILES))
 SRC_FILES := $(addsuffix .c, $(SRC_FILES))
 OBJ_FILES := $(addprefix objs/, $(OBJ_FILES))
@@ -19,17 +18,12 @@ build: window-suspender
 	@du -b window-suspender
 
 # Parser
-y.tab.h: y.tab.c
-y.tab.c:
-	yacc -d config.y # -t for tracing
+config.parser.tab.h: config.parser.tab.c
+config.parser.tab.c:
+	yacc -d -o config.parser.tab.c config.parser.y # -t for tracing
 
-# Use the lexer produced by `lex`
-lexer_lex.c: y.tab.h
-	lex -t config.lex.l > lexer_lex.c
-
-# Use our hand written lexer (gperf is needed to build the hash table)
-lexer_gperf.c: y.tab.h
-	gperf -m1000 -n config.gperf.c > lexer_gperf.c
+config.lexer.c: config.parser.tab.h
+	gperf -m1000 -n config.lexer.gperf.c > config.lexer.c
 
 objs/%.o: %.c common.h actions.gen.h
 	@mkdir -p objs
@@ -43,7 +37,7 @@ clean:
 	rm -rf objs
 
 clean-parser: clean
-	rm -f lex.yy.c y.tab.c y.tab.h
+	rm -f config.lexer.c config.parser.tab.c config.parser.tab.h
 
 LOC:
 	wc -l $(SRC_FILES)

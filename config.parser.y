@@ -10,34 +10,27 @@
 
 #define C_NOT(X) conditional_logic_not_new(X)
 
-int yylex();
-int yyparse();
+int yylex(), yyparse();
 extern FILE *yyin;
 extern int yylineno, yylinepos;
 static Statement *config;
-static int parsing_error;
 
-void yyerror(const char *str)
-{
+void yyerror(const char *str) {
   printerr("Error: %s (line: %d:%d)\n", str, yylineno, yylinepos);
-  parsing_error = 1;
 }
 
 Statement* parse_config(const char *file) {
+  if (! (yyin = fopen(file, "r")))
+    return printerr("Error: %s: %s\n", file, strerror(errno)), NULL;
+
   config = NULL;
-  parsing_error = 0;
-  if (! (yyin = fopen(file, "r"))) {
-    printerr("Error: %s: %s\n", file, strerror(errno));
-    return NULL;
-  }
-  yyparse();
-  fclose(yyin);
-  if (parsing_error) {
-    if (config) {
+  errno = yyparse();
+  if (errno) {
+    if (config)
       statement_free(config);
-      config = NULL;
-    }
+    config = NULL;
   }
+  fclose(yyin);
   return config;
 }
 

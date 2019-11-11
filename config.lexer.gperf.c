@@ -11,7 +11,7 @@ struct __attribute__((packed)) token {
 #include "wnck.h"
 #include "common.h"
 #include "statement.h"
-#include "y.tab.h"
+#include "config.parser.tab.h"
 
 // Change order of struct members in initialization and compress `yytokentype`
 #define T(YY_TOKEN_TYPE, YY_LVAL) YY_LVAL, YY_TOKEN_TYPE - 255
@@ -107,7 +107,7 @@ struct __attribute__((packed)) token {
 "--refresh-duration",        T(OPTION_REFRESH_DURATION , 0)
 %%
 
-#define LEX_ERROR '\1' // TODO: What does yylex() really return on error?
+#define LEX_ERROR '\1'
 
 FILE *yyin;
 static char *yytext;

@@ -1,5 +1,5 @@
 /* ANSI-C code produced by gperf version 3.1 */
-/* Command-line: gperf -m1000 -n config.gperf.c  */
+/* Command-line: gperf -m1000 -n config.lexer.gperf.c  */
 /* Computed positions: -k'3-4,7,15,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -29,7 +29,7 @@
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
-#line 1 "config.gperf.c"
+#line 1 "config.lexer.gperf.c"
 struct __attribute__((packed)) token {
   const char *name;
   unsigned short yylval;
@@ -43,7 +43,7 @@ struct __attribute__((packed)) token {
 #include "wnck.h"
 #include "common.h"
 #include "statement.h"
-#include "y.tab.h"
+#include "config.parser.tab.h"
 
 // Change order of struct members in initialization and compress `yytokentype`
 #define T(YY_TOKEN_TYPE, YY_LVAL) YY_LVAL, YY_TOKEN_TYPE - 255
@@ -119,184 +119,184 @@ in_word_set (register const char *str, register size_t len)
 {
   static const struct __attribute__((packed)) token wordlist[] =
     {
-#line 49 "config.gperf.c"
+#line 49 "config.lexer.gperf.c"
       {"pin",                       T(ACTION_TYPE , STATEMENT_PIN)},
-#line 104 "config.gperf.c"
+#line 104 "config.lexer.gperf.c"
       {"contains",                  T(CONTAINS                , 0)},
-#line 103 "config.gperf.c"
+#line 103 "config.lexer.gperf.c"
       {"has",                       T(HAS                     , 0)},
-#line 97 "config.gperf.c"
+#line 97 "config.lexer.gperf.c"
       {"print",                     T(PRINT                   , 0)},
-#line 51 "config.gperf.c"
+#line 51 "config.lexer.gperf.c"
       {"activate",                  T(ACTION_TYPE , STATEMENT_ACTIVATE)},
-#line 95 "config.gperf.c"
+#line 95 "config.lexer.gperf.c"
       {"state",                     T(COND_STATE              , 0)},
-#line 52 "config.gperf.c"
+#line 52 "config.lexer.gperf.c"
       {"activate_transient",        T(ACTION_TYPE , STATEMENT_ACTIVATE_TRANSIENT)},
-#line 98 "config.gperf.c"
+#line 98 "config.lexer.gperf.c"
       {"system",                    T(SYSTEM                  , 0)},
-#line 86 "config.gperf.c"
+#line 86 "config.lexer.gperf.c"
       {"title",                     T(WINDOW_FIELD , WINDOW_TITLE)},
-#line 90 "config.gperf.c"
+#line 90 "config.lexer.gperf.c"
       {"role",                      T(WINDOW_FIELD , WINDOW_ROLE)},
-#line 88 "config.gperf.c"
+#line 88 "config.lexer.gperf.c"
       {"classname",                 T(WINDOW_FIELD , WINDOW_CLASS)},
-#line 102 "config.gperf.c"
+#line 102 "config.lexer.gperf.c"
       {"children",                  T(CHILDREN                , 0)},
-#line 83 "config.gperf.c"
+#line 83 "config.lexer.gperf.c"
       {"splashscreen",              T(WINDOW_TYPE ,  WNCK_WINDOW_SPLASHSCREEN)},
-#line 107 "config.gperf.c"
+#line 107 "config.lexer.gperf.c"
       {"--refresh-duration",        T(OPTION_REFRESH_DURATION , 0)},
-#line 73 "config.gperf.c"
+#line 73 "config.lexer.gperf.c"
       {"demands_attention",         T(WINDOW_STATE , WNCK_WINDOW_STATE_DEMANDS_ATTENTION)},
-#line 44 "config.gperf.c"
+#line 44 "config.lexer.gperf.c"
       {"unset_skip_pager",          T(ACTION_TYPE , STATEMENT_UNSET_SKIP_PAGER)},
-#line 28 "config.gperf.c"
+#line 28 "config.lexer.gperf.c"
       {"unminimize",                T(ACTION_TYPE , STATEMENT_UNMINIMIZE)},
-#line 30 "config.gperf.c"
+#line 30 "config.lexer.gperf.c"
       {"unmaximize",                T(ACTION_TYPE , STATEMENT_UNMAXIMIZE)},
-#line 53 "config.gperf.c"
+#line 53 "config.lexer.gperf.c"
       {"opened",                    T(HOOK_TYPE , HOOK_OPENED)},
-#line 46 "config.gperf.c"
+#line 46 "config.lexer.gperf.c"
       {"unset_skip_tasklist",       T(ACTION_TYPE , STATEMENT_UNSET_SKIP_TASKLIST)},
-#line 27 "config.gperf.c"
+#line 27 "config.lexer.gperf.c"
       {"minimize",                  T(ACTION_TYPE , STATEMENT_MINIMIZE)},
-#line 48 "config.gperf.c"
+#line 48 "config.lexer.gperf.c"
       {"unset_fullscreen",          T(ACTION_TYPE , STATEMENT_UNSET_FULLSCREEN)},
-#line 35 "config.gperf.c"
+#line 35 "config.lexer.gperf.c"
       {"shade",                     T(ACTION_TYPE , STATEMENT_SHADE)},
-#line 26 "config.gperf.c"
+#line 26 "config.lexer.gperf.c"
       {"close",                     T(ACTION_TYPE , STATEMENT_CLOSE)},
-#line 82 "config.gperf.c"
+#line 82 "config.lexer.gperf.c"
       {"normal",                    T(WINDOW_TYPE ,  WNCK_WINDOW_NORMAL)},
-#line 72 "config.gperf.c"
+#line 72 "config.lexer.gperf.c"
       {"fullscreen",                T(WINDOW_STATE , WNCK_WINDOW_STATE_FULLSCREEN)},
-#line 93 "config.gperf.c"
+#line 93 "config.lexer.gperf.c"
       {"type",                      T(COND_TYPE               , 0)},
-#line 50 "config.gperf.c"
+#line 50 "config.lexer.gperf.c"
       {"unpin",                     T(ACTION_TYPE , STATEMENT_UNPIN)},
-#line 89 "config.gperf.c"
+#line 89 "config.lexer.gperf.c"
       {"iconname",                  T(WINDOW_FIELD , WINDOW_ICON_NAME)},
-#line 37 "config.gperf.c"
+#line 37 "config.lexer.gperf.c"
       {"make_above",                T(ACTION_TYPE , STATEMENT_MAKE_ABOVE)},
-#line 79 "config.gperf.c"
+#line 79 "config.lexer.gperf.c"
       {"dialog",                    T(WINDOW_TYPE ,  WNCK_WINDOW_DIALOG)},
-#line 70 "config.gperf.c"
+#line 70 "config.lexer.gperf.c"
       {"skip_tasklist",             T(WINDOW_STATE , WNCK_WINDOW_STATE_SKIP_TASKLIST)},
-#line 91 "config.gperf.c"
+#line 91 "config.lexer.gperf.c"
       {"workspace",                 T(WINDOW_FIELD , WINDOW_WORKSPACE)},
-#line 42 "config.gperf.c"
+#line 42 "config.lexer.gperf.c"
       {"unstick",                   T(ACTION_TYPE , STATEMENT_UNSTICK)},
-#line 71 "config.gperf.c"
+#line 71 "config.lexer.gperf.c"
       {"hidden",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_HIDDEN)},
-#line 29 "config.gperf.c"
+#line 29 "config.lexer.gperf.c"
       {"maximize",                  T(ACTION_TYPE , STATEMENT_MAXIMIZE)},
-#line 65 "config.gperf.c"
+#line 65 "config.lexer.gperf.c"
       {"minimized",                 T(WINDOW_STATE , WNCK_WINDOW_STATE_MINIMIZED)},
-#line 74 "config.gperf.c"
+#line 74 "config.lexer.gperf.c"
       {"above",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_ABOVE)},
-#line 68 "config.gperf.c"
+#line 68 "config.lexer.gperf.c"
       {"shaded",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_SHADED)},
-#line 54 "config.gperf.c"
+#line 54 "config.lexer.gperf.c"
       {"closed",                    T(HOOK_TYPE , HOOK_CLOSED)},
       {""},
-#line 34 "config.gperf.c"
+#line 34 "config.lexer.gperf.c"
       {"unmaximize_vertically",     T(ACTION_TYPE , STATEMENT_UNMAXIMIZE_VERTICALLY)},
-#line 69 "config.gperf.c"
+#line 69 "config.lexer.gperf.c"
       {"skip_pager",                T(WINDOW_STATE , WNCK_WINDOW_STATE_SKIP_PAGER)},
-#line 92 "config.gperf.c"
+#line 92 "config.lexer.gperf.c"
       {"workspace_number",          T(COND_WORKSPACE_NUMBER   , 0)},
-#line 32 "config.gperf.c"
+#line 32 "config.lexer.gperf.c"
       {"unmaximize_horizontally",   T(ACTION_TYPE , STATEMENT_UNMAXIMIZE_HORIZONTALLY)},
-#line 41 "config.gperf.c"
+#line 41 "config.lexer.gperf.c"
       {"stick",                     T(ACTION_TYPE , STATEMENT_STICK)},
-#line 99 "config.gperf.c"
+#line 99 "config.lexer.gperf.c"
       {"return",                    T(RETURN                  , 0)},
-#line 61 "config.gperf.c"
+#line 61 "config.lexer.gperf.c"
       {"state_changed",             T(HOOK_TYPE , HOOK_STATE_CHANGED)},
-#line 55 "config.gperf.c"
+#line 55 "config.lexer.gperf.c"
       {"class_changed",             T(HOOK_TYPE , HOOK_CLASS_CHANGED)},
-#line 101 "config.gperf.c"
+#line 101 "config.lexer.gperf.c"
       {"process",                   T(PROCESS                 , 0)},
-#line 84 "config.gperf.c"
+#line 84 "config.lexer.gperf.c"
       {"toolbar",                   T(WINDOW_TYPE ,  WNCK_WINDOW_TOOLBAR)},
-#line 94 "config.gperf.c"
+#line 94 "config.lexer.gperf.c"
       {"stackposition",             T(COND_STACKPOSITION      , 0)},
-#line 36 "config.gperf.c"
+#line 36 "config.lexer.gperf.c"
       {"unshade",                   T(ACTION_TYPE , STATEMENT_UNSHADE)},
-#line 96 "config.gperf.c"
+#line 96 "config.lexer.gperf.c"
       {"hook",                      T(COND_HOOK               , 0)},
-#line 77 "config.gperf.c"
+#line 77 "config.lexer.gperf.c"
       {"sticky",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_STICKY)},
       {""},
-#line 45 "config.gperf.c"
+#line 45 "config.lexer.gperf.c"
       {"set_skip_tasklist",         T(ACTION_TYPE , STATEMENT_SET_SKIP_TASKLIST)},
-#line 47 "config.gperf.c"
+#line 47 "config.lexer.gperf.c"
       {"set_fullscreen",            T(ACTION_TYPE , STATEMENT_SET_FULLSCREEN)},
-#line 80 "config.gperf.c"
+#line 80 "config.lexer.gperf.c"
       {"dock",                      T(WINDOW_TYPE ,  WNCK_WINDOW_DOCK)},
-#line 100 "config.gperf.c"
+#line 100 "config.lexer.gperf.c"
       {"suspend",                   T(SUSPEND                 , 0)},
-#line 85 "config.gperf.c"
+#line 85 "config.lexer.gperf.c"
       {"utility",                   T(WINDOW_TYPE ,  WNCK_WINDOW_UTILITY)},
-#line 38 "config.gperf.c"
+#line 38 "config.lexer.gperf.c"
       {"unmake_above",              T(ACTION_TYPE , STATEMENT_UNMAKE_ABOVE)},
-#line 67 "config.gperf.c"
+#line 67 "config.lexer.gperf.c"
       {"maximized_vertically",      T(WINDOW_STATE , WNCK_WINDOW_STATE_MAXIMIZED_VERTICALLY)},
-#line 106 "config.gperf.c"
+#line 106 "config.lexer.gperf.c"
       {"--refresh-delay",           T(OPTION_REFRESH_DELAY    , 0)},
-#line 43 "config.gperf.c"
+#line 43 "config.lexer.gperf.c"
       {"set_skip_pager",            T(ACTION_TYPE , STATEMENT_SET_SKIP_PAGER)},
-#line 78 "config.gperf.c"
+#line 78 "config.lexer.gperf.c"
       {"desktop",                   T(WINDOW_TYPE ,  WNCK_WINDOW_DESKTOP)},
-#line 39 "config.gperf.c"
+#line 39 "config.lexer.gperf.c"
       {"make_below",                T(ACTION_TYPE , STATEMENT_MAKE_BELOW)},
-#line 60 "config.gperf.c"
+#line 60 "config.lexer.gperf.c"
       {"workspace_changed",         T(HOOK_TYPE , HOOK_WORKSPACE_CHANGED)},
       {""}, {""},
-#line 76 "config.gperf.c"
+#line 76 "config.lexer.gperf.c"
       {"inactive_workspace",        T(WINDOW_STATE , WNCK_WINDOW_STATE_INACTIVE_WORKSPACE)},
       {""},
-#line 87 "config.gperf.c"
+#line 87 "config.lexer.gperf.c"
       {"groupname",                 T(WINDOW_FIELD , WINDOW_GROUP)},
-#line 56 "config.gperf.c"
+#line 56 "config.lexer.gperf.c"
       {"name_changed",              T(HOOK_TYPE , HOOK_NAME_CHANGED)},
-#line 57 "config.gperf.c"
+#line 57 "config.lexer.gperf.c"
       {"role_changed",              T(HOOK_TYPE , HOOK_ROLE_CHANGED)},
-#line 66 "config.gperf.c"
+#line 66 "config.lexer.gperf.c"
       {"maximized_horizontally",    T(WINDOW_STATE , WNCK_WINDOW_STATE_MAXIMIZED_HORIZONTALLY)},
-#line 75 "config.gperf.c"
+#line 75 "config.lexer.gperf.c"
       {"below",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_BELOW)},
       {""}, {""}, {""},
-#line 31 "config.gperf.c"
+#line 31 "config.lexer.gperf.c"
       {"maximize_horizontally",     T(ACTION_TYPE , STATEMENT_MAXIMIZE_HORIZONTALLY)},
       {""}, {""}, {""}, {""},
-#line 33 "config.gperf.c"
+#line 33 "config.lexer.gperf.c"
       {"maximize_vertically",       T(ACTION_TYPE , STATEMENT_MAXIMIZE_VERTICALLY)},
       {""},
-#line 59 "config.gperf.c"
+#line 59 "config.lexer.gperf.c"
       {"icon_changed",              T(HOOK_TYPE , HOOK_ICON_CHANGED)},
       {""}, {""}, {""},
-#line 58 "config.gperf.c"
+#line 58 "config.lexer.gperf.c"
       {"type_changed",              T(HOOK_TYPE , HOOK_TYPE_CHANGED)},
-#line 81 "config.gperf.c"
+#line 81 "config.lexer.gperf.c"
       {"menu",                      T(WINDOW_TYPE ,  WNCK_WINDOW_MENU)},
       {""}, {""}, {""},
-#line 63 "config.gperf.c"
+#line 63 "config.lexer.gperf.c"
       {"active_workspace_changed",  T(HOOK_TYPE , HOOK_ACTIVE_WORKSPACE_CHANGED)},
       {""},
-#line 105 "config.gperf.c"
+#line 105 "config.lexer.gperf.c"
       {"--suspend-delay",           T(OPTION_SUSPEND_DELAY    , 0)},
       {""}, {""}, {""}, {""},
-#line 62 "config.gperf.c"
+#line 62 "config.lexer.gperf.c"
       {"window_stacking_changed",   T(HOOK_TYPE , HOOK_WINDOW_STACKING_CHANGED)},
       {""}, {""}, {""}, {""},
-#line 40 "config.gperf.c"
+#line 40 "config.lexer.gperf.c"
       {"unmake_below",              T(ACTION_TYPE , STATEMENT_UNMAKE_BELOW)},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""},
-#line 64 "config.gperf.c"
+#line 64 "config.lexer.gperf.c"
       {"showing_desktop_changed",   T(HOOK_TYPE , HOOK_SHOWING_DESKTOP_CHANGED)}
     };
 
@@ -314,10 +314,10 @@ in_word_set (register const char *str, register size_t len)
     }
   return 0;
 }
-#line 108 "config.gperf.c"
+#line 108 "config.lexer.gperf.c"
 
 
-#define LEX_ERROR '\1' // TODO: What does yylex() really return on error?
+#define LEX_ERROR '\1'
 
 FILE *yyin;
 static char *yytext;
