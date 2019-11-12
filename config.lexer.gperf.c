@@ -17,6 +17,11 @@ struct __attribute__((packed)) token {
 #define T(YY_TOKEN_TYPE, YY_LVAL) YY_LVAL, YY_TOKEN_TYPE - 255
 #define TOKEN_GET_TOKEN_TYPE(TOK) ((TOK)->yytokentype + 255)
 
+/* XXX Note XXX
+ * A unique value that must be distinct from all other YYLVALs in the token
+ * table. It is used to tell if a keyword is an option that takes an argument.  */
+#define YYLVAL_OPTION_WITH_ARG 0x1555
+
 %struct-type
 %readonly-tables
 %7bit
@@ -50,6 +55,7 @@ struct __attribute__((packed)) token {
 "unpin",                     T(ACTION_TYPE , STATEMENT_UNPIN)
 "activate",                  T(ACTION_TYPE , STATEMENT_ACTIVATE)
 "activate_transient",        T(ACTION_TYPE , STATEMENT_ACTIVATE_TRANSIENT)
+"set_geometry",              T(SET_GEOMETRY, 0 /* Action */)
 "opened",                    T(HOOK_TYPE , HOOK_OPENED)
 "closed",                    T(HOOK_TYPE , HOOK_CLOSED)
 "class_changed",             T(HOOK_TYPE , HOOK_CLASS_CHANGED)
@@ -75,14 +81,14 @@ struct __attribute__((packed)) token {
 "below",                     T(WINDOW_STATE , WNCK_WINDOW_STATE_BELOW)
 "inactive_workspace",        T(WINDOW_STATE , WNCK_WINDOW_STATE_INACTIVE_WORKSPACE)
 "sticky",                    T(WINDOW_STATE , WNCK_WINDOW_STATE_STICKY)
-"desktop",                   T(WINDOW_TYPE ,  WNCK_WINDOW_DESKTOP)
-"dialog",                    T(WINDOW_TYPE ,  WNCK_WINDOW_DIALOG)
-"dock",                      T(WINDOW_TYPE ,  WNCK_WINDOW_DOCK)
-"menu",                      T(WINDOW_TYPE ,  WNCK_WINDOW_MENU)
-"normal",                    T(WINDOW_TYPE ,  WNCK_WINDOW_NORMAL)
-"splashscreen",              T(WINDOW_TYPE ,  WNCK_WINDOW_SPLASHSCREEN)
-"toolbar",                   T(WINDOW_TYPE ,  WNCK_WINDOW_TOOLBAR)
-"utility",                   T(WINDOW_TYPE ,  WNCK_WINDOW_UTILITY)
+"desktop",                   T(WINDOW_TYPE , WNCK_WINDOW_DESKTOP)
+"dialog",                    T(WINDOW_TYPE , WNCK_WINDOW_DIALOG)
+"dock",                      T(WINDOW_TYPE , WNCK_WINDOW_DOCK)
+"menu",                      T(WINDOW_TYPE , WNCK_WINDOW_MENU)
+"normal",                    T(WINDOW_TYPE , WNCK_WINDOW_NORMAL)
+"splashscreen",              T(WINDOW_TYPE , WNCK_WINDOW_SPLASHSCREEN)
+"toolbar",                   T(WINDOW_TYPE , WNCK_WINDOW_TOOLBAR)
+"utility",                   T(WINDOW_TYPE , WNCK_WINDOW_UTILITY)
 "title",                     T(WINDOW_FIELD , WINDOW_TITLE)
 "groupname",                 T(WINDOW_FIELD , WINDOW_GROUP)
 "classname",                 T(WINDOW_FIELD , WINDOW_CLASS)
@@ -102,9 +108,24 @@ struct __attribute__((packed)) token {
 "children",                  T(CHILDREN                , 0)
 "has",                       T(HAS                     , 0)
 "contains",                  T(CONTAINS                , 0)
-"--suspend-delay",           T(OPTION_SUSPEND_DELAY    , 0)
-"--refresh-delay",           T(OPTION_REFRESH_DELAY    , 0)
-"--refresh-duration",        T(OPTION_REFRESH_DURATION , 0)
+"--delay",                   T(OPTION_DELAY            , YYLVAL_OPTION_WITH_ARG)
+"--refresh-after",           T(OPTION_REFRESH_AFTER    , YYLVAL_OPTION_WITH_ARG)
+"--refresh-duration",        T(OPTION_REFRESH_DURATION , YYLVAL_OPTION_WITH_ARG)
+"-x",                        T(OPTION_X                , YYLVAL_OPTION_WITH_ARG)
+"-y",                        T(OPTION_Y                , YYLVAL_OPTION_WITH_ARG)
+"--width",                   T(OPTION_WIDTH            , YYLVAL_OPTION_WITH_ARG)
+"--height",                  T(OPTION_HEIGHT           , YYLVAL_OPTION_WITH_ARG)
+"--current",                 T(GRAVITY , WNCK_WINDOW_GRAVITY_CURRENT)
+"--northwest",               T(GRAVITY , WNCK_WINDOW_GRAVITY_NORTHWEST)
+"--north",                   T(GRAVITY , WNCK_WINDOW_GRAVITY_NORTH)
+"--northeast",               T(GRAVITY , WNCK_WINDOW_GRAVITY_NORTHEAST)
+"--west",                    T(GRAVITY , WNCK_WINDOW_GRAVITY_WEST)
+"--center",                  T(GRAVITY , WNCK_WINDOW_GRAVITY_CENTER)
+"--east",                    T(GRAVITY , WNCK_WINDOW_GRAVITY_EAST)
+"--southwest",               T(GRAVITY , WNCK_WINDOW_GRAVITY_SOUTHWEST)
+"--south",                   T(GRAVITY , WNCK_WINDOW_GRAVITY_SOUTH)
+"--southeast",               T(GRAVITY , WNCK_WINDOW_GRAVITY_SOUTHEAST)
+"--static",                  T(GRAVITY , WNCK_WINDOW_GRAVITY_STATIC)
 %%
 
 #define LEX_ERROR '\1'
@@ -159,6 +180,7 @@ static int yylex_impl() {
 NEXT:
   c = GETC();
   switch (c) {
+// ========= Whitespace, shell comments, C-like comments ======================
     case '\t':
     case '\n':
     case ' ':
@@ -176,34 +198,9 @@ WAIT_FOR_TERMINATING_SLASH:
           switch ((c = GETC())) {
             case '*': goto WAIT_FOR_TERMINATING_SLASH;
             case '/': goto NEXT; }
-      printerr("Warning: EOF reached while scanning /* */ comment\n");
+      printerr("Warning: EOF reached while scanning /* comment */\n");
       return EOF;
-    case '&':
-      switch ((c = GETC())) {
-        case '&':           return AND_AND;
-        default: UNGETC(c); return '&'; }
-    case '|':
-      switch ((c = GETC())) {
-        case '|':           return OR_OR;
-        default: UNGETC(c); return '|'; }
-    case '!':
-      switch ((c = GETC())) {
-        case '=': yylval.comparison = COMPARE_UNEQUAL; return UNEQUAL;
-        case '~':                                      return REGEX_UNEQUAL;
-        default: UNGETC(c);                            return NOT; }
-    case '=':
-      switch ((c = GETC())) {
-        case '=': yylval.comparison = COMPARE_EQUAL; return EQUAL;
-        case '~':                                    return REGEX_EQUAL;
-        default: UNGETC(c);                          return '='; }
-    case '<':
-      switch ((c = GETC())) {
-        case '=': yylval.comparison = COMPARE_LESS_EQUAL;     return LESS_EQUAL;
-        default: UNGETC(c); yylval.comparison = COMPARE_LESS; return LESS; }
-    case '>':
-      switch ((c = GETC())) {
-        case '=': yylval.comparison = COMPARE_GREATER_EQUAL;     return GREATER_EQUAL;
-        default: UNGETC(c); yylval.comparison = COMPARE_GREATER; return GREATER; }
+// ========= Strings ==========================================================
     case '\'':
       for (;;)
         switch ((c = GETC())) {
@@ -216,6 +213,7 @@ WAIT_FOR_TERMINATING_SLASH:
           case EOF:  printerr("Warning: EOF reached while scanning double quoted string\n");
           case '"':  return yytext_finalize(), yylval.string = strdup(yytext), STRING;
           default:   yytext_append(c); }
+// ========= Numbers ==========================================================
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
       for (yytext_append(c); isdigit(c = GETC()); yytext_append(c));
@@ -223,6 +221,35 @@ WAIT_FOR_TERMINATING_SLASH:
       yytext_finalize();
       return yylval.number = atoi(yytext), NUMBER;
     default:
+// ========= Operators ========================================================
+#define TOK(A,B) yylval.number = B, A
+#define CHPAIR(C1, C2) C1+(C2<<8)
+      if (strchr("<=>!|&~", c)) {
+        int nextc = GETC();
+        if (nextc == EOF)
+          goto ONE_CHARACTER;
+        switch (CHPAIR(c,nextc)) {
+          case CHPAIR('&','&'): return TOK(AND_AND       , 0);
+          case CHPAIR('|','|'): return TOK(OR_OR         , 0);
+          case CHPAIR('!','='): return TOK(UNEQUAL       , COMPARE_UNEQUAL);
+          case CHPAIR('!','~'): return TOK(REGEX_UNEQUAL , 0);
+          case CHPAIR('=','='): return TOK(EQUAL         , COMPARE_EQUAL);
+          case CHPAIR('=','~'): return TOK(REGEX_EQUAL   , 0);
+          case CHPAIR('<','='): return TOK(LESS_EQUAL    , COMPARE_LESS_EQUAL);
+          case CHPAIR('>','='): return TOK(GREATER_EQUAL , COMPARE_GREATER_EQUAL);
+          default: UNGETC(nextc);
+ONE_CHARACTER:
+            switch (c) {
+              case '!':         return TOK(NOT           , 0);
+              case '<':         return TOK(LESS          , COMPARE_LESS);
+              case '>':         return TOK(GREATER       , COMPARE_GREATER);
+            }
+        }
+        printerr("Error: unknown operator: %c\n", c);
+        return LEX_ERROR;
+      }
+
+// ========= Keywords =========================================================
       if (! (isalpha(c) || c == '-' || c == '_'))
         return c; // Cannot be a keyword
 
@@ -235,13 +262,9 @@ WAIT_FOR_TERMINATING_SLASH:
       tok = in_word_set(yytext, yyleng);
       if (tok) {
         // An --option may have a trailing '='
-        switch (TOKEN_GET_TOKEN_TYPE(tok)) {
-          case OPTION_SUSPEND_DELAY:
-          case OPTION_REFRESH_DELAY:
-          case OPTION_REFRESH_DURATION:
-            if ((c = GETC()) != '=')
-              UNGETC(c);
-        }
+        if (tok->yylval == YYLVAL_OPTION_WITH_ARG)
+          if ((c = GETC()) != '=')
+            UNGETC(c);
         return yylval.number = tok->yylval, TOKEN_GET_TOKEN_TYPE(tok);
       }
       else {

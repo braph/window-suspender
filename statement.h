@@ -45,6 +45,12 @@ struct Statement {
       unsigned int refresh_duration;
     } suspend;
 
+    struct {
+      WnckWindowGravity gravity;
+      WnckWindowMoveResizeMask mask;
+      int x, y, width, height;
+    } geometry;
+
   } klass;
 };
 
@@ -56,6 +62,7 @@ Statement* statement_system_new(const char*);
 Statement* statement_suspend_new(unsigned int, unsigned int, unsigned int);
 Statement* statement_noop_new();
 Statement* statement_action_new(statement_type);
+Statement* statement_action_set_geometry_new();
 
 // Methods
 bool statement_get_matched(Statement*, WnckWindow*, PointerArray*);

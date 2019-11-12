@@ -62,7 +62,11 @@ o(PIN,                     pin,                     wnck_window_pin(win))
 o(UNPIN,                   unpin,                   wnck_window_unpin(win))
 o(ACTIVATE,                activate,                wnck_window_activate(win, 0))
 o(ACTIVATE_TRANSIENT,      activate_transient,      wnck_window_activate_transient(win, 0))
-
+o(SET_GEOMETRY,            set_geometry,            wnck_window_set_geometry(win,
+                                                    this.klass.geometry.gravity,
+                                                    this.klass.geometry.mask,
+                                                    this.klass.geometry.x, this.klass.geometry.y,
+                                                    this.klass.geometry.width, this.klass.geometry.height))
 #undef INCLUDE_STATEMENT_ACTIONS_ENUMS
 #undef INCLUDE_STATEMENT_ACTIONS_EXECUTE_CODE
 #undef INCLUDE_STATEMENT_ACTIONS_DUMP_CODE

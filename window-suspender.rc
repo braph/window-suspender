@@ -85,10 +85,45 @@
 #     system <STRING>
 #       Executes STRING in a shell. Can also be used inside a conditional.
 #
-#     suspend [--suspend-delay=<MILIS>] [--refresh-delay=<MILIS>] [--refresh-duration=<MILIS>]
+#     suspend [--delay=<ms>] [--refresh-after=<ms>] [--refresh-duration=<ms>]
+#       --delay            <ms>  Wait <ms> milli seconds before suspending the window
+#       --refresh-after    <ms>  Refresh the window after <ms> milli seconds
+#       --refresh-duration <ms>  Keep the window activated for <ms> milli seconds [default is 1]
 #       Suspends the window.
 #
-#     TODO: add actions (maximize, make_above, ...)
+#     set_geometry [-x <N>] [-y <N>] [--width <N>] [--height <N>] [<gravity-option>]
+#       <gravity-option>:
+#         --current --center --static
+#         --north --east --south --west
+#         --northeast --northwest --southeast --southwest
+#
+#     close
+#     minimize
+#     unminimize
+#     maximize
+#     unmaximize
+#     maximize_horizontally
+#     unmaximize_horizontally
+#     maximize_vertically
+#     unmaximize_vertically
+#     shade
+#     unshade
+#     make_above
+#     unmake_above
+#     make_below
+#     unmake_below
+#     stick
+#     unstick
+#     set_skip_pager
+#     unset_skip_pager
+#     set_skip_tasklist
+#     unset_skip_tasklist
+#     set_fullscreen
+#     unset_fullscreen
+#     pin
+#     unpin
+#     activate
+#     activate_transient
 #
 #
 #  ENVIROMENT FOR SYSTEM COMMAND
@@ -125,9 +160,10 @@
 #
 #
 #  TIPS
+#    - Have a look at the LibWnck documentation
 #    - Use the xprop or the wnckprop command to obtain information of a window
 #    - Config is best viewed with shell syntax (at least in vim)
-#    - A small refresh (1ms) on every second is recommended, since X11 applications
+#    - A refresh on every second is recommended, since X11 applications
 #      need to be running for working with the clipboard.
 #
 #
@@ -144,10 +180,11 @@ process 'chrome-sandbox' has children 'bnox';
 #               `-chrome-sandbox(1011)-+
 #                                       `-bnox(1892)
 
-# Keep webcam window always above
+# When webcam window is opened ... always above
 (classname == 'mpv' && title =~ '\.jpg\?[0-9]{3,}') {
   (hook == opened) {
-    make_above;
+    make_above;                  # Make it always above
+    set_geometry -x 1234 -y 588; # Move it
   }
 }
 
@@ -180,13 +217,13 @@ process 'chrome-sandbox' has children 'bnox';
 
 # Minimized windows and windows on inactive workspaces shall be refreshed every minute.
 (state == minimized || state == inactive_workspace) {
-  suspend --refresh-delay 60000;
+  suspend --refresh-after 60000;
   return;
 }
 
 # Suspend windows that are not directly in the foreground
 (stackposition >= 1) {
-  suspend --suspend-delay 5000 --refresh-delay 1000 --refresh-duration 1;
+  suspend --delay 5000 --refresh-after 1000 --refresh-duration 1;
   return;
 }
 

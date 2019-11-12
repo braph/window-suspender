@@ -55,7 +55,7 @@ OPT:
 
   if (! foreground)
     switch (fork()) {
-      case -1: return perror("fork()"), 1;
+      case -1: return printerr("fork(): %s", strerror(errno)), 1;
       case 0:  break;
       default: return 0;
     }

@@ -125,6 +125,11 @@ Statement* statement_action_new(statement_type action_type) {
   return self;
 }
 
+Statement* statement_action_set_geometry_new() {
+  CREATE_SELF(STATEMENT_SET_GEOMETRY, geometry);
+  return self;
+}
+
 void statement_dump(Statement *self, int indent, bool dump_list) {
   #define outf(FMT, ...) \
     printerr("%*s" FMT, indent, "", ##__VA_ARGS__)
@@ -140,7 +145,7 @@ void statement_dump(Statement *self, int indent, bool dump_list) {
     outf("return");
     break;
   case STATEMENT_SUSPEND:
-    outf("suspend --suspend_delay=%u --refresh_delay=%u --refresh_duration=%u",
+    outf("suspend --delay=%u --refresh-after=%u --refresh-duration=%u",
         this.klass.suspend.suspend_delay,
         this.klass.suspend.refresh_delay,
         this.klass.suspend.refresh_duration);

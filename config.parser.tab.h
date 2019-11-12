@@ -55,34 +55,40 @@ extern int yydebug;
     WINDOW_TYPE = 261,
     WINDOW_FIELD = 262,
     HOOK_TYPE = 263,
-    ACTION_TYPE = 264,
-    EQUAL = 265,
-    UNEQUAL = 266,
-    LESS = 267,
-    LESS_EQUAL = 268,
-    GREATER = 269,
-    GREATER_EQUAL = 270,
-    REGEX_EQUAL = 271,
-    REGEX_UNEQUAL = 272,
-    CONTAINS = 273,
-    PRINT = 274,
-    SYSTEM = 275,
-    SUSPEND = 276,
-    RETURN = 277,
-    PROCESS = 278,
-    HAS = 279,
-    CHILDREN = 280,
-    OPTION_SUSPEND_DELAY = 281,
-    OPTION_REFRESH_DELAY = 282,
-    OPTION_REFRESH_DURATION = 283,
-    COND_TYPE = 284,
-    COND_STACKPOSITION = 285,
-    COND_STATE = 286,
-    COND_HOOK = 287,
-    COND_WORKSPACE_NUMBER = 288,
-    NOT = 289,
-    AND_AND = 290,
-    OR_OR = 291
+    GRAVITY = 264,
+    ACTION_TYPE = 265,
+    EQUAL = 266,
+    UNEQUAL = 267,
+    LESS = 268,
+    LESS_EQUAL = 269,
+    GREATER = 270,
+    GREATER_EQUAL = 271,
+    SET_GEOMETRY = 272,
+    REGEX_EQUAL = 273,
+    REGEX_UNEQUAL = 274,
+    CONTAINS = 275,
+    PRINT = 276,
+    SYSTEM = 277,
+    SUSPEND = 278,
+    RETURN = 279,
+    PROCESS = 280,
+    HAS = 281,
+    CHILDREN = 282,
+    OPTION_DELAY = 283,
+    OPTION_REFRESH_AFTER = 284,
+    OPTION_REFRESH_DURATION = 285,
+    OPTION_X = 286,
+    OPTION_Y = 287,
+    OPTION_WIDTH = 288,
+    OPTION_HEIGHT = 289,
+    COND_TYPE = 290,
+    COND_STACKPOSITION = 291,
+    COND_STATE = 292,
+    COND_HOOK = 293,
+    COND_WORKSPACE_NUMBER = 294,
+    NOT = 295,
+    AND_AND = 296,
+    OR_OR = 297
   };
 #endif
 /* Tokens.  */
@@ -92,34 +98,40 @@ extern int yydebug;
 #define WINDOW_TYPE 261
 #define WINDOW_FIELD 262
 #define HOOK_TYPE 263
-#define ACTION_TYPE 264
-#define EQUAL 265
-#define UNEQUAL 266
-#define LESS 267
-#define LESS_EQUAL 268
-#define GREATER 269
-#define GREATER_EQUAL 270
-#define REGEX_EQUAL 271
-#define REGEX_UNEQUAL 272
-#define CONTAINS 273
-#define PRINT 274
-#define SYSTEM 275
-#define SUSPEND 276
-#define RETURN 277
-#define PROCESS 278
-#define HAS 279
-#define CHILDREN 280
-#define OPTION_SUSPEND_DELAY 281
-#define OPTION_REFRESH_DELAY 282
-#define OPTION_REFRESH_DURATION 283
-#define COND_TYPE 284
-#define COND_STACKPOSITION 285
-#define COND_STATE 286
-#define COND_HOOK 287
-#define COND_WORKSPACE_NUMBER 288
-#define NOT 289
-#define AND_AND 290
-#define OR_OR 291
+#define GRAVITY 264
+#define ACTION_TYPE 265
+#define EQUAL 266
+#define UNEQUAL 267
+#define LESS 268
+#define LESS_EQUAL 269
+#define GREATER 270
+#define GREATER_EQUAL 271
+#define SET_GEOMETRY 272
+#define REGEX_EQUAL 273
+#define REGEX_UNEQUAL 274
+#define CONTAINS 275
+#define PRINT 276
+#define SYSTEM 277
+#define SUSPEND 278
+#define RETURN 279
+#define PROCESS 280
+#define HAS 281
+#define CHILDREN 282
+#define OPTION_DELAY 283
+#define OPTION_REFRESH_AFTER 284
+#define OPTION_REFRESH_DURATION 285
+#define OPTION_X 286
+#define OPTION_Y 287
+#define OPTION_WIDTH 288
+#define OPTION_HEIGHT 289
+#define COND_TYPE 290
+#define COND_STACKPOSITION 291
+#define COND_STATE 292
+#define COND_HOOK 293
+#define COND_WORKSPACE_NUMBER 294
+#define NOT 295
+#define AND_AND 296
+#define OR_OR 297
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -131,6 +143,7 @@ union YYSTYPE
   char *string;
   WnckWindowType type;
   WnckWindowState state;
+  WnckWindowGravity gravity;
   window_string_id field;
   statement_type action_type;
   hook_type hook;
@@ -139,7 +152,7 @@ union YYSTYPE
   struct Conditional *conditional;
   GSList *string_list;
 
-#line 143 "config.parser.tab.h"
+#line 156 "config.parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

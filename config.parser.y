@@ -15,7 +15,7 @@ extern FILE *yyin;
 extern int yylineno, yylinepos;
 static Statement *config;
 
-void yyerror(const char *str) {
+static void yyerror(const char *str) {
   printerr("Error: %s (line: %d:%d)\n", str, yylineno, yylinepos);
 }
 
@@ -42,6 +42,7 @@ Statement* parse_config(const char *file) {
   char *string;
   WnckWindowType type;
   WnckWindowState state;
+  WnckWindowGravity gravity;
   window_string_id field;
   statement_type action_type;
   hook_type hook;
@@ -51,22 +52,25 @@ Statement* parse_config(const char *file) {
   GSList *string_list;
 }
 
-%token <string> STRING
-%token <number> NUMBER
-%token <state>  WINDOW_STATE
-%token <type>   WINDOW_TYPE
-%token <field>  WINDOW_FIELD
-%token <hook>   HOOK_TYPE
-%token <action_type> ACTION_TYPE
-%token <comparison> EQUAL UNEQUAL LESS LESS_EQUAL GREATER GREATER_EQUAL
+%token <string>       STRING
+%token <number>       NUMBER
+%token <state>        WINDOW_STATE
+%token <type>         WINDOW_TYPE
+%token <field>        WINDOW_FIELD
+%token <hook>         HOOK_TYPE
+%token <gravity>      GRAVITY
+%token <action_type>  ACTION_TYPE
+%token <comparison>   EQUAL UNEQUAL LESS LESS_EQUAL GREATER GREATER_EQUAL
+%token SET_GEOMETRY
 %token REGEX_EQUAL REGEX_UNEQUAL CONTAINS
 %token PRINT SYSTEM SUSPEND RETURN PROCESS HAS CHILDREN
-%token OPTION_SUSPEND_DELAY OPTION_REFRESH_DELAY OPTION_REFRESH_DURATION
+%token OPTION_DELAY OPTION_REFRESH_AFTER OPTION_REFRESH_DURATION
+%token OPTION_X OPTION_Y OPTION_WIDTH OPTION_HEIGHT
 %token COND_TYPE COND_STACKPOSITION COND_STATE COND_HOOK COND_WORKSPACE_NUMBER
 %token NOT AND_AND OR_OR
 
 %type <conditional> condition
-%type <statement> config statement statement_list
+%type <statement> config statement statement_list set_geometry_statement
 %type <statement> command_statement if_statement suspend_statement
 %type <comparison> numeric_comparison
 %type <string_list> string_list
@@ -140,9 +144,24 @@ statement_list
 
 suspend_statement
     : SUSPEND                                          { $$ = statement_suspend_new(0,0,0);       }
-    | suspend_statement OPTION_SUSPEND_DELAY NUMBER    { $1->klass.suspend.suspend_delay = $3;    }
-    | suspend_statement OPTION_REFRESH_DELAY NUMBER    { $1->klass.suspend.refresh_delay = $3;    }
+    | suspend_statement OPTION_DELAY NUMBER            { $1->klass.suspend.suspend_delay = $3;    }
+    | suspend_statement OPTION_REFRESH_AFTER NUMBER    { $1->klass.suspend.refresh_delay = $3;    }
     | suspend_statement OPTION_REFRESH_DURATION NUMBER { $1->klass.suspend.refresh_duration = $3; }
+    ;
+
+set_geometry_statement
+    : SET_GEOMETRY
+      { $$ = statement_action_set_geometry_new(); }
+    | set_geometry_statement OPTION_X NUMBER
+      { $1->klass.geometry.mask |= WNCK_WINDOW_CHANGE_X;      $1->klass.geometry.x = $3;      }
+    | set_geometry_statement OPTION_Y NUMBER
+      { $1->klass.geometry.mask |= WNCK_WINDOW_CHANGE_Y;      $1->klass.geometry.y = $3;      }
+    | set_geometry_statement OPTION_WIDTH NUMBER
+      { $1->klass.geometry.mask |= WNCK_WINDOW_CHANGE_WIDTH;  $1->klass.geometry.width = $3;  }
+    | set_geometry_statement OPTION_HEIGHT NUMBER
+      { $1->klass.geometry.mask |= WNCK_WINDOW_CHANGE_HEIGHT; $1->klass.geometry.height= $3;  }
+    | set_geometry_statement GRAVITY
+      { $1->klass.geometry.gravity = $2; }
     ;
 
 command_statement
@@ -151,5 +170,6 @@ command_statement
     | SYSTEM STRING { $$ = statement_system_new($2); free($2); }
     | RETURN        { $$ = statement_return_new();             }
     | ACTION_TYPE   { $$ = statement_action_new($1);           }
+    | set_geometry_statement
     | suspend_statement
     ;
