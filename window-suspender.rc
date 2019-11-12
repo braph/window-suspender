@@ -188,6 +188,13 @@ process 'chrome-sandbox' has children 'bnox';
   }
 }
 
+# If a game is running, minimize all new windows
+(hook == opened) {
+  (any (classname == 'openarena.x86_64')) {
+    minimize;
+  }
+}
+
 # Never suspend media players
 (classname == 'mpv' || classname == 'vlc') {
   return;

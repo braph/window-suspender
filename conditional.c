@@ -51,6 +51,11 @@ compare_number:
       }
     case CONDITIONAL_SYSTEM:
       return system_with_window_environment(this.klass.system.string, win);
+    case CONDITIONAL_ANY:
+      for (GList *l = wnck_screen_get_windows(wnck_window_get_screen(win)); l; l = l->next)
+        if (conditional_check(this.klass.any.condition, l->data))
+          return 1;
+      return 0;
   }
   assert(!"reached");
   return 0;
@@ -64,6 +69,9 @@ void conditional_free(Conditional* self) {
     /*FALLTHROUGH*/
   case CONDITIONAL_LOGIC_NOT:
     conditional_free(this.klass.logic.a);
+    break;
+  case CONDITIONAL_ANY:
+    conditional_free(this.klass.any.condition);
     break;
   case CONDITIONAL_REGEX_MATCH:
     regfree(&this.klass.regex_match.regex);
@@ -85,6 +93,12 @@ Conditional* conditional_logic_new(conditional_type type, Conditional *a, Condit
   CREATE_SELF(type, logic);
   this.klass.logic.a = a;
   this.klass.logic.b = b;
+  return self;
+}
+
+Conditional* conditional_any_new(Conditional *conditional) {
+  CREATE_SELF(CONDITIONAL_ANY, any);
+  this.klass.any.condition = conditional;
   return self;
 }
 
@@ -155,17 +169,22 @@ Conditional* conditional_system_new(const char *string) {
 void conditional_dump(Conditional* self) {
 #define o(...) printerr(__VA_ARGS__);
   switch (this.type) {
-  case CONDITIONAL_LOGIC_NOT:
-    o("!(");
-    conditional_dump(this.klass.logic.a);
-    o(")");
-    break;
   case CONDITIONAL_LOGIC_OR:
   case CONDITIONAL_LOGIC_AND:
     o("(");
     conditional_dump(this.klass.logic.a);
     o(" %s ", (this.type == CONDITIONAL_LOGIC_OR ? "||" : "&&"));
     conditional_dump(this.klass.logic.b);
+    o(")");
+    break;
+  case CONDITIONAL_LOGIC_NOT:
+    o("!(");
+    conditional_dump(this.klass.logic.a);
+    o(")");
+    break;
+  case CONDITIONAL_ANY:
+    o("any(");
+    conditional_dump(this.klass.any.condition);
     o(")");
     break;
   case CONDITIONAL_STRING_MATCH:

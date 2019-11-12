@@ -95,6 +95,7 @@ struct __attribute__((packed)) token {
 "iconname",                  T(WINDOW_FIELD , WINDOW_ICON_NAME)
 "role",                      T(WINDOW_FIELD , WINDOW_ROLE)
 "workspace",                 T(WINDOW_FIELD , WINDOW_WORKSPACE)
+"any",                       T(ANY                     , 0)
 "workspace_number",          T(COND_WORKSPACE_NUMBER   , 0)
 "type",                      T(COND_TYPE               , 0)
 "stackposition",             T(COND_STACKPOSITION      , 0)

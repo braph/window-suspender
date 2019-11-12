@@ -86,9 +86,10 @@ extern int yydebug;
     COND_STATE = 292,
     COND_HOOK = 293,
     COND_WORKSPACE_NUMBER = 294,
-    NOT = 295,
-    AND_AND = 296,
-    OR_OR = 297
+    ANY = 295,
+    NOT = 296,
+    AND_AND = 297,
+    OR_OR = 298
   };
 #endif
 /* Tokens.  */
@@ -129,9 +130,10 @@ extern int yydebug;
 #define COND_STATE 292
 #define COND_HOOK 293
 #define COND_WORKSPACE_NUMBER 294
-#define NOT 295
-#define AND_AND 296
-#define OR_OR 297
+#define ANY 295
+#define NOT 296
+#define AND_AND 297
+#define OR_OR 298
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -152,7 +154,7 @@ union YYSTYPE
   struct Conditional *conditional;
   GSList *string_list;
 
-#line 156 "config.parser.tab.h"
+#line 158 "config.parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

@@ -11,6 +11,7 @@ typedef enum __packed {
   CONDITIONAL_LOGIC_OR,
   CONDITIONAL_LOGIC_AND,
   CONDITIONAL_LOGIC_NOT,
+  CONDITIONAL_ANY,
   CONDITIONAL_STRING_MATCH,
   CONDITIONAL_STRING_CONTAINS,
   CONDITIONAL_REGEX_MATCH,
@@ -73,6 +74,10 @@ struct Conditional {
     } logic;
 
     struct {
+      Conditional *condition;
+    } any;
+
+    struct {
       comparison_type comparison;
       int number;
     } numeric;
@@ -111,6 +116,7 @@ Conditional* conditional_logic_new(conditional_type, Conditional*, Conditional*)
 #define      conditional_logic_not_new(C)   conditional_logic_new(CONDITIONAL_LOGIC_NOT, C, NULL)
 #define      conditional_logic_or_new(A,B)  conditional_logic_new(CONDITIONAL_LOGIC_OR, A, B)
 #define      conditional_logic_and_new(A,B) conditional_logic_new(CONDITIONAL_LOGIC_AND, A, B)
+Conditional* conditional_any_new(Conditional*);
 Conditional* conditional_string_match_new(window_string_id, const char*);
 Conditional* conditional_string_contains_new(window_string_id, const char*);
 Conditional* conditional_regex_match_new(window_string_id, const char*);

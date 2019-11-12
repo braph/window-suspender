@@ -67,7 +67,7 @@ Statement* parse_config(const char *file) {
 %token OPTION_DELAY OPTION_REFRESH_AFTER OPTION_REFRESH_DURATION
 %token OPTION_X OPTION_Y OPTION_WIDTH OPTION_HEIGHT
 %token COND_TYPE COND_STACKPOSITION COND_STATE COND_HOOK COND_WORKSPACE_NUMBER
-%token NOT AND_AND OR_OR
+%token ANY NOT AND_AND OR_OR
 
 %type <conditional> condition
 %type <statement> config statement statement_list set_geometry_statement
@@ -78,6 +78,7 @@ Statement* parse_config(const char *file) {
 %right AND_AND
 %right OR_OR
 %right NOT
+%right ANY
 
 %start config
 %%
@@ -124,6 +125,7 @@ condition
     | condition AND_AND condition     { $$ = conditional_logic_and_new($1, $3); }
     | condition OR_OR condition %prec AND_AND { $$ = conditional_logic_or_new($1, $3); }
     | NOT condition  %prec OR_OR      { $$ = C_NOT($2); }
+    | ANY condition  %prec NOT        { $$ = conditional_any_new($2); }
     | '(' condition ')'               { $$ = $2; }
     ;
 

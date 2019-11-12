@@ -39,7 +39,7 @@ static gboolean application_handle_state(GSource*, GSourceFunc, gpointer);
 #define NEVER -1
 static inline void application_next_state(Application* app, ApplicationState state, unsigned int timeout) {
   app->state = state;
-  if (timeout == NOW) {
+  if (timeout == NOW || timeout == 1 /* 1ms => NOW */) {
     g_source_set_ready_time((GSource*) app, NEVER);
     application_handle_state((GSource*) app, NULL, NULL);
   }
